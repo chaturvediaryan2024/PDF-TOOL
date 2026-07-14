@@ -1214,6 +1214,26 @@
             .dropdown { min-width: 300px; grid-template-columns: 1fr; }
             .mega-menu { grid-template-columns: repeat(2, 1fr); }
             .option-row { flex-direction: column; }
+            /* Mobile navbar fix */
+            .navbar { padding: 0.75rem 1rem; }
+            .logo { font-size: 1.2rem; gap: 8px; }
+            .logo-icon { font-size: 1.5rem; }
+            .nav-right { gap: 0.5rem; }
+            #authButtons { gap: 0.5rem; }
+            .btn-login { font-size: 0.85rem; }
+            .btn-signup { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+            .user-avatar { width: 32px; height: 32px; }
+        }
+        @media (max-width: 480px) {
+            .navbar { padding: 0.5rem 0.75rem; }
+            .logo { font-size: 1rem; gap: 6px; }
+            .logo-icon { font-size: 1.3rem; }
+            .logo span { display: inline; }
+            .nav-right { gap: 0.4rem; }
+            #authButtons { gap: 0.4rem; }
+            .btn-login { font-size: 0.75rem; padding: 0.3rem 0.5rem; }
+            .btn-signup { padding: 0.35rem 0.6rem; font-size: 0.75rem; }
+            .user-avatar { width: 28px; height: 28px; }
         }
 
         /* Scrollbar */
