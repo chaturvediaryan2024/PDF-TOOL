@@ -917,6 +917,31 @@
             background-color: #17152b;
             color: #ffffff;
         }
+        /* Custom dark dropdown (replaces the native white popup) */
+        .cs-wrap { position: relative; width: 100%; }
+        .cs-selected {
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            padding: 0.75rem; background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border); border-radius: 10px;
+            color: var(--text); font-size: 0.9rem;
+        }
+        .cs-selected i { color: var(--primary); font-size: 0.75rem; transition: transform 0.25s; }
+        .cs-wrap.open .cs-selected { border-color: var(--primary); box-shadow: 0 0 16px rgba(236,72,153,0.2); }
+        .cs-wrap.open .cs-selected i { transform: rotate(180deg); }
+        .cs-list {
+            position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+            background: #17152b; border: 1px solid var(--border); border-radius: 10px;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.55); z-index: 60;
+            max-height: 240px; overflow-y: auto; padding: 4px;
+            opacity: 0; transform: translateY(-6px); pointer-events: none; transition: all 0.2s;
+        }
+        .cs-wrap.open .cs-list { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .cs-item {
+            padding: 0.65rem 0.8rem; color: var(--text-muted); font-size: 0.9rem;
+            border-radius: 7px; transition: all 0.15s;
+        }
+        .cs-item:hover { background: rgba(236,72,153,0.15); color: #fff; }
+        .cs-item.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: #fff; }
         .option-row { display: flex; gap: 1rem; }
         .option-row .option-group { flex: 1; }
 
@@ -1575,6 +1600,52 @@
             });
         }
 
+        // Replace native <select> popups (white on Windows) with a themed dark dropdown.
+        // The underlying <select> stays in the DOM and in sync, so gv() keeps working.
+        function enhanceSelects(root) {
+            root.querySelectorAll('select').forEach(sel => {
+                if (sel.dataset.enhanced) return;
+                sel.dataset.enhanced = '1';
+                sel.style.display = 'none';
+                const wrap = document.createElement('div');
+                wrap.className = 'cs-wrap';
+                const btn = document.createElement('div');
+                btn.className = 'cs-selected';
+                const label = document.createElement('span');
+                label.textContent = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : '';
+                btn.appendChild(label);
+                const caret = document.createElement('i');
+                caret.className = 'fas fa-chevron-down';
+                btn.appendChild(caret);
+                const list = document.createElement('div');
+                list.className = 'cs-list';
+                Array.from(sel.options).forEach((opt, i) => {
+                    const item = document.createElement('div');
+                    item.className = 'cs-item' + (i === sel.selectedIndex ? ' active' : '');
+                    item.textContent = opt.text;
+                    item.addEventListener('click', e => {
+                        e.stopPropagation();
+                        sel.selectedIndex = i;
+                        sel.dispatchEvent(new Event('change'));
+                        label.textContent = opt.text;
+                        list.querySelectorAll('.cs-item').forEach(x => x.classList.remove('active'));
+                        item.classList.add('active');
+                        wrap.classList.remove('open');
+                    });
+                    list.appendChild(item);
+                });
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.cs-wrap.open').forEach(w => { if (w !== wrap) w.classList.remove('open'); });
+                    wrap.classList.toggle('open');
+                });
+                wrap.appendChild(btn);
+                wrap.appendChild(list);
+                sel.parentNode.insertBefore(wrap, sel.nextSibling);
+            });
+        }
+        document.addEventListener('click', () => document.querySelectorAll('.cs-wrap.open').forEach(w => w.classList.remove('open')));
+
         function openTool(tool) {
             currentTool = tool;
             const cfg = TOOLS[tool];
@@ -1590,6 +1661,7 @@
             document.getElementById('processBtn').disabled = true;
             document.getElementById('fileList').innerHTML = '';
             document.getElementById('optionsArea').innerHTML = cfg.options ? `<div class="options-panel">${cfg.options}</div>` : '';
+            enhanceSelects(document.getElementById('optionsArea'));
             document.getElementById('previewArea').innerHTML = '';
             document.getElementById('progressContainer').classList.remove('active');
             document.getElementById('downloadBtn').style.display = 'none';
