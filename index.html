@@ -2579,6 +2579,7 @@
 
         // OCR - Extract text from PDF/Image using Tesseract.js
         async function ocrPdf(fill, text) {
+            if (typeof Tesseract === 'undefined') throw new Error('Tesseract OCR library not loaded. Please refresh the page.');
             text.textContent = 'Loading OCR engine...'; fill.style.width = '10%';
             const file = uploadedFiles[0];
             let imageData;
@@ -2780,6 +2781,7 @@
 
         // PDF to PPT
         async function pdfToPpt(fill, text) {
+            if (typeof PptxGenJS === 'undefined') throw new Error('PptxGenJS library not loaded. Please refresh the page.');
             text.textContent = 'Converting PDF pages to slides...'; fill.style.width = '20%';
             const pdf = await pdfjsLib.getDocument(await uploadedFiles[0].arrayBuffer()).promise;
             const pptx = new PptxGenJS();
