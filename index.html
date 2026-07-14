@@ -1884,7 +1884,14 @@
                 }
                 dlBtn.style.display = 'inline-flex';
                 lastProcessDone = true;
-            } catch (e) { text.textContent = 'Error: ' + e.message; fill.style.background = '#ef4444'; }
+            } catch (e) {
+                text.textContent = 'Error: ' + e.message;
+                fill.style.background = '#ef4444';
+                processedBlob = null;
+                outputFileName = '';
+                dlBtn.style.display = 'none';
+                prvBtn.style.display = 'none';
+            }
         }
 
         async function processServer(tool, fill, text) {
@@ -2178,62 +2185,74 @@
             const bytes = await uploadedFiles[0].arrayBuffer();
 
             // Use pdf.js to verify password - it properly handles encryption
+            let pdf;
             try {
                 const loadingTask = pdfjsLib.getDocument({ data: bytes, password: password });
-                const pdf = await loadingTask.promise;
 
-                text.textContent = 'Password correct! Creating unlocked PDF...';
-                fill.style.width = '40%';
-
-                // Create new PDF with jsPDF (no encryption)
-                const { jsPDF } = window.jspdf;
-                const firstPage = await pdf.getPage(1);
-                const viewport = firstPage.getViewport({ scale: 2 });
-
-                const doc = new jsPDF({
-                    orientation: viewport.width > viewport.height ? 'l' : 'p',
-                    unit: 'pt',
-                    format: [viewport.width / 2, viewport.height / 2]
-                });
-
-                const totalPages = pdf.numPages;
-                for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-                    text.textContent = `Processing page ${pageNum}/${totalPages}...`;
-                    fill.style.width = (40 + (pageNum / totalPages) * 50) + '%';
-
-                    const page = await pdf.getPage(pageNum);
-                    const pageViewport = page.getViewport({ scale: 2 });
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = pageViewport.width;
-                    canvas.height = pageViewport.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    await page.render({ canvasContext: ctx, viewport: pageViewport }).promise;
-
-                    const imgData = canvas.toDataURL('image/jpeg', 0.92);
-
-                    if (pageNum > 1) {
-                        doc.addPage([pageViewport.width / 2, pageViewport.height / 2], pageViewport.width > pageViewport.height ? 'l' : 'p');
+                // Handle password errors through onPassword callback
+                loadingTask.onPassword = (updateCallback, reason) => {
+                    if (reason === pdfjsLib.PasswordResponses.INCORRECT_PASSWORD) {
+                        throw new Error('WRONG_PASSWORD');
                     }
+                    updateCallback(password);
+                };
 
-                    doc.addImage(imgData, 'JPEG', 0, 0, pageViewport.width / 2, pageViewport.height / 2);
-                }
-
-                fill.style.width = '95%';
-                text.textContent = 'Finalizing...';
-
-                processedBlob = doc.output('blob');
-                outputFileName = 'unlocked.pdf';
-
+                pdf = await loadingTask.promise;
             } catch (e) {
-                if (e.name === 'PasswordException' || e.message.includes('password') || e.message.includes('Incorrect')) {
+                // Check all possible password error indicators
+                const errStr = String(e.message || e).toLowerCase();
+                if (errStr.includes('password') || errStr.includes('incorrect') || errStr.includes('wrong') || e.name === 'PasswordException') {
                     throw new Error('Wrong password! Please enter the correct password.');
                 }
-                throw new Error('Cannot unlock this PDF: ' + e.message);
+                throw new Error('Cannot open this PDF: ' + (e.message || e));
             }
+
+            // If we reach here, password was correct
+            text.textContent = 'Password correct! Creating unlocked PDF...';
+            fill.style.width = '40%';
+
+            // Create new PDF with jsPDF (no encryption)
+            const { jsPDF } = window.jspdf;
+            const firstPage = await pdf.getPage(1);
+            const viewport = firstPage.getViewport({ scale: 2 });
+
+            const doc = new jsPDF({
+                orientation: viewport.width > viewport.height ? 'l' : 'p',
+                unit: 'pt',
+                format: [viewport.width / 2, viewport.height / 2]
+            });
+
+            const totalPages = pdf.numPages;
+            for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                text.textContent = `Processing page ${pageNum}/${totalPages}...`;
+                fill.style.width = (40 + (pageNum / totalPages) * 50) + '%';
+
+                const page = await pdf.getPage(pageNum);
+                const pageViewport = page.getViewport({ scale: 2 });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = pageViewport.width;
+                canvas.height = pageViewport.height;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                await page.render({ canvasContext: ctx, viewport: pageViewport }).promise;
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+                if (pageNum > 1) {
+                    doc.addPage([pageViewport.width / 2, pageViewport.height / 2], pageViewport.width > pageViewport.height ? 'l' : 'p');
+                }
+
+                doc.addImage(imgData, 'JPEG', 0, 0, pageViewport.width / 2, pageViewport.height / 2);
+            }
+
+            fill.style.width = '95%';
+            text.textContent = 'Finalizing...';
+
+            processedBlob = doc.output('blob');
+            outputFileName = 'unlocked.pdf';
         }
 
         async function comparePdf(fill, text) {
