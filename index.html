@@ -1300,7 +1300,6 @@
                                 <a href="#" class="dropdown-item" onclick="openTool('protect')"><span class="icon-sm icon-lock"><i class="fas fa-lock"></i></span> Protect PDF</a>
                                 <a href="#" class="dropdown-item" onclick="openTool('unlock')"><span class="icon-sm icon-lock"><i class="fas fa-unlock"></i></span> Unlock PDF</a>
                                 <a href="#" class="dropdown-item" onclick="openTool('sign')"><span class="icon-sm icon-compress"><i class="fas fa-signature"></i></span> Sign PDF</a>
-                                <a href="#" class="dropdown-item" onclick="openTool('redact')"><span class="icon-sm icon-split"><i class="fas fa-eraser"></i></span> Redact PDF</a>
                             </div>
                         </div>
                     </div>
@@ -1381,14 +1380,11 @@
             <div class="tool-card" data-category="edit" onclick="openTool('page-numbers')"><div class="icon bg-edit"><i class="fas fa-list-ol"></i></div><h4>Page Numbers</h4><p>Add numbering</p></div>
             <div class="tool-card" data-category="edit" onclick="openTool('crop')"><div class="icon bg-edit"><i class="fas fa-crop-alt"></i></div><h4>Crop PDF</h4><p>Trim margins</p></div>
             <div class="tool-card" data-category="edit" onclick="openTool('edit-pdf')"><div class="icon bg-primary"><i class="fas fa-edit"></i></div><h4>Edit PDF</h4><p>Add text & images</p></div>
-            <div class="tool-card" data-category="edit" onclick="openTool('add-header-footer')"><div class="icon bg-edit"><i class="fas fa-heading"></i></div><h4>Header & Footer</h4><p>Add headers</p></div>
             <!-- SECURITY -->
             <div class="tool-card" data-category="security" onclick="openTool('protect')"><div class="icon bg-security"><i class="fas fa-lock"></i></div><h4>Protect PDF</h4><p>Add password</p></div>
             <div class="tool-card" data-category="security" onclick="openTool('unlock')"><div class="icon bg-security"><i class="fas fa-unlock"></i></div><h4>Unlock PDF</h4><p>Remove password</p></div>
             <div class="tool-card" data-category="security" onclick="openTool('sign')"><div class="icon bg-sign"><i class="fas fa-signature"></i></div><h4>Sign PDF</h4><p>Add signature</p></div>
-            <div class="tool-card" data-category="security" onclick="openTool('redact')"><div class="icon bg-security"><i class="fas fa-eraser"></i></div><h4>Redact PDF</h4><p>Hide sensitive info</p></div>
             <!-- MORE -->
-            <div class="tool-card" data-category="more" onclick="openTool('flatten')"><div class="icon bg-compress"><i class="fas fa-layer-group"></i></div><h4>Flatten PDF</h4><p>Flatten forms</p></div>
             <div class="tool-card" data-category="more" onclick="openTool('grayscale')"><div class="icon bg-compress"><i class="fas fa-adjust"></i></div><h4>Grayscale</h4><p>Convert to B&W</p></div>
             <div class="tool-card" data-category="more" onclick="openTool('pdf-info')"><div class="icon bg-primary"><i class="fas fa-info-circle"></i></div><h4>PDF Info</h4><p>View metadata</p></div>
         </div>
@@ -1822,9 +1818,13 @@
             Array.from(files).forEach(f => uploadedFiles.push(f));
             // Discard any previous result so a stale file can never be downloaded.
             processedBlob = null;
+            outputFileName = '';
             document.getElementById('previewBtn').style.display = 'none';
             document.getElementById('downloadBtn').style.display = 'none';
             document.getElementById('progressContainer').classList.remove('active');
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressFill').style.background = '';
+            document.getElementById('progressText').textContent = '';
             renderFileList();
             document.getElementById('processBtn').disabled = uploadedFiles.length === 0;
             if (cfg.preview && uploadedFiles.length === 1) renderPreview();
@@ -2169,21 +2169,70 @@
         }
 
         async function unlockPdf(fill, text) {
-            text.textContent = 'Attempting to unlock...';
-            fill.style.width = '30%';
-            const { PDFDocument } = PDFLib;
+            const password = gv('unlockPassword');
+            if (!password) throw new Error('Enter the PDF password');
+
+            text.textContent = 'Verifying password...';
+            fill.style.width = '20%';
+
             const bytes = await uploadedFiles[0].arrayBuffer();
+
+            // Use pdf.js to verify password - it properly handles encryption
             try {
-                const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
-                fill.style.width = '60%';
-                const out = await PDFDocument.create();
-                const pages = await out.copyPages(doc, doc.getPageIndices());
-                pages.forEach(p => out.addPage(p));
+                const loadingTask = pdfjsLib.getDocument({ data: bytes, password: password });
+                const pdf = await loadingTask.promise;
+
+                text.textContent = 'Password correct! Creating unlocked PDF...';
+                fill.style.width = '40%';
+
+                // Create new PDF with jsPDF (no encryption)
+                const { jsPDF } = window.jspdf;
+                const firstPage = await pdf.getPage(1);
+                const viewport = firstPage.getViewport({ scale: 2 });
+
+                const doc = new jsPDF({
+                    orientation: viewport.width > viewport.height ? 'l' : 'p',
+                    unit: 'pt',
+                    format: [viewport.width / 2, viewport.height / 2]
+                });
+
+                const totalPages = pdf.numPages;
+                for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                    text.textContent = `Processing page ${pageNum}/${totalPages}...`;
+                    fill.style.width = (40 + (pageNum / totalPages) * 50) + '%';
+
+                    const page = await pdf.getPage(pageNum);
+                    const pageViewport = page.getViewport({ scale: 2 });
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = pageViewport.width;
+                    canvas.height = pageViewport.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    await page.render({ canvasContext: ctx, viewport: pageViewport }).promise;
+
+                    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+                    if (pageNum > 1) {
+                        doc.addPage([pageViewport.width / 2, pageViewport.height / 2], pageViewport.width > pageViewport.height ? 'l' : 'p');
+                    }
+
+                    doc.addImage(imgData, 'JPEG', 0, 0, pageViewport.width / 2, pageViewport.height / 2);
+                }
+
                 fill.style.width = '95%';
-                processedBlob = new Blob([await out.save()], { type: 'application/pdf' });
+                text.textContent = 'Finalizing...';
+
+                processedBlob = doc.output('blob');
                 outputFileName = 'unlocked.pdf';
+
             } catch (e) {
-                throw new Error('Cannot unlock this PDF. Strong encryption requires desktop software.');
+                if (e.name === 'PasswordException' || e.message.includes('password') || e.message.includes('Incorrect')) {
+                    throw new Error('Wrong password! Please enter the correct password.');
+                }
+                throw new Error('Cannot unlock this PDF: ' + e.message);
             }
         }
 
