@@ -1683,7 +1683,7 @@
             'resize-image': { title: 'Resize Image', accept: 'image/*', multiple: true, hint: 'Select images', btn: 'Resize', out: 'resized.zip', server: false, icon: 'fa-expand-arrows-alt', options: `<h4><i class="fas fa-expand-arrows-alt"></i> Dimensions</h4><div class="option-row"><div class="option-group"><label>Width</label><input type="number" id="resizeWidth" value="800" min="10"></div><div class="option-group"><label>Height</label><input type="number" id="resizeHeight" value="600" min="10"></div></div><div class="option-group"><label><input type="checkbox" id="maintainRatio" checked> Keep aspect ratio</label></div>` },
             'passport-photo': { title: 'Passport Photo', accept: 'image/*', multiple: false, hint: 'Select your photo', btn: 'Create', out: 'passport.jpg', server: false, icon: 'fa-id-card', options: `<h4><i class="fas fa-id-card"></i> Passport Photo</h4><div class="option-group"><label>Photo Size</label><select id="passportSize"><option value="35x45">35 × 45 mm (India / most countries)</option><option value="51x51">51 × 51 mm (US 2×2 inch)</option><option value="25x35">25 × 35 mm (small ID)</option><option value="33x48">33 × 48 mm (Schengen / EU)</option></select></div><div class="option-group"><label>Output</label><select id="passportOutput"><option value="single">Single photo</option><option value="sheet">Printable 4×6 sheet (multiple copies)</option></select></div><div class="option-group"><label>Background</label><select id="passportBg"><option value="keep">Keep original</option><option value="white">White</option></select></div><div class="option-group"><label>Or exact size in pixels (overrides standard size above)</label><div class="option-row"><div class="option-group"><label>Width px</label><input type="number" id="passportPxW" placeholder="e.g. 150" min="20"></div><div class="option-group"><label>Height px</label><input type="number" id="passportPxH" placeholder="e.g. 200" min="20"></div></div></div>` },
             'repair': { title: 'Repair PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Repair', out: 'repaired.pdf', server: false, icon: 'fa-wrench' },
-            'ocr': { title: 'OCR PDF', accept: '.pdf,image/*', multiple: false, hint: 'Select PDF or Image', btn: 'Extract Text', out: 'extracted.txt', server: false, icon: 'fa-eye' },
+            'ocr': { title: 'OCR PDF', accept: '.pdf,image/*', multiple: false, hint: 'Select PDF or Image', btn: 'Extract Text', out: 'extracted.txt', server: false, icon: 'fa-eye', options: `<h4><i class="fas fa-language"></i> Language</h4><div class="option-group"><label>Select Language</label><select id="ocrLanguage"><option value="eng">English</option><option value="hin">Hindi (हिंदी)</option><option value="eng+hin">English + Hindi</option><option value="mar">Marathi (मराठी)</option><option value="tam">Tamil (தமிழ்)</option><option value="tel">Telugu (తెలుగు)</option><option value="ben">Bengali (বাংলা)</option><option value="guj">Gujarati (ગુજરાતી)</option><option value="kan">Kannada (ಕನ್ನಡ)</option><option value="mal">Malayalam (മലയാളം)</option><option value="pan">Punjabi (ਪੰਜਾਬੀ)</option><option value="urd">Urdu (اردو)</option></select></div>` },
             'jpg-to-pdf': { title: 'JPG to PDF', accept: 'image/*', multiple: true, hint: 'Select images', btn: 'Convert', out: 'images.pdf', server: false, icon: 'fa-file-image' },
             'png-to-pdf': { title: 'PNG to PDF', accept: '.png', multiple: true, hint: 'Select PNGs', btn: 'Convert', out: 'images.pdf', server: false, icon: 'fa-image' },
             'txt-to-pdf': { title: 'TXT to PDF', accept: '.txt', multiple: false, hint: 'Select text file', btn: 'Convert', out: 'document.pdf', server: false, icon: 'fa-file-alt' },
@@ -2577,24 +2577,41 @@
             processedBlob = new Blob([await doc.save()], { type: 'application/pdf' }); outputFileName = 'signed.pdf';
         }
 
-        // OCR - Extract text from PDF/Image using Tesseract.js (all pages)
+        // OCR - Extract text from PDF/Image using Tesseract.js (all pages, multi-language)
         async function ocrPdf(fill, text) {
             if (typeof Tesseract === 'undefined') throw new Error('Tesseract OCR library not loaded. Please refresh the page.');
-            text.textContent = 'Initializing OCR engine...'; fill.style.width = '5%';
+
+            const language = gv('ocrLanguage') || 'eng';
+            const langNames = {
+                'eng': 'English', 'hin': 'Hindi', 'eng+hin': 'English+Hindi',
+                'mar': 'Marathi', 'tam': 'Tamil', 'tel': 'Telugu', 'ben': 'Bengali',
+                'guj': 'Gujarati', 'kan': 'Kannada', 'mal': 'Malayalam', 'pan': 'Punjabi', 'urd': 'Urdu'
+            };
+
+            text.textContent = `Loading ${langNames[language] || language} OCR...`; fill.style.width = '5%';
             const file = uploadedFiles[0];
             let allText = '';
 
+            // Create worker with selected language
+            const worker = await Tesseract.createWorker(language, 1, {
+                logger: m => {
+                    if (m.status === 'loading language traineddata') {
+                        text.textContent = `Downloading ${langNames[language]} language data...`;
+                        fill.style.width = (5 + m.progress * 15) + '%';
+                    }
+                }
+            });
+
             if (file.type === 'application/pdf') {
-                // Process all PDF pages
                 const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
                 const totalPages = pdf.numPages;
 
                 for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
                     text.textContent = `Rendering page ${pageNum}/${totalPages}...`;
-                    fill.style.width = (5 + (pageNum / totalPages) * 30) + '%';
+                    fill.style.width = (20 + (pageNum / totalPages) * 20) + '%';
 
                     const page = await pdf.getPage(pageNum);
-                    const viewport = page.getViewport({ scale: 2 });
+                    const viewport = page.getViewport({ scale: 2.5 }); // Higher scale for better OCR
                     const canvas = document.createElement('canvas');
                     canvas.width = viewport.width;
                     canvas.height = viewport.height;
@@ -2603,34 +2620,42 @@
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     await page.render({ canvasContext: ctx, viewport }).promise;
 
-                    text.textContent = `OCR page ${pageNum}/${totalPages}...`;
-                    const baseProgress = 35 + ((pageNum - 1) / totalPages) * 55;
+                    text.textContent = `OCR page ${pageNum}/${totalPages} (${langNames[language]})...`;
 
-                    const result = await Tesseract.recognize(canvas, 'eng', {
-                        logger: m => {
-                            if (m.status === 'recognizing text') {
-                                fill.style.width = (baseProgress + (m.progress * 55 / totalPages)) + '%';
-                            }
-                        }
-                    });
+                    const result = await worker.recognize(canvas);
+                    fill.style.width = (40 + (pageNum / totalPages) * 50) + '%';
 
-                    allText += `--- Page ${pageNum} ---\n${result.data.text}\n\n`;
+                    if (result.data.text.trim()) {
+                        allText += `--- Page ${pageNum} ---\n${result.data.text}\n\n`;
+                    }
                 }
             } else {
-                // Single image OCR
-                text.textContent = 'Processing image...'; fill.style.width = '20%';
-                const result = await Tesseract.recognize(file, 'eng', {
-                    logger: m => {
-                        if (m.status === 'recognizing text') {
-                            fill.style.width = (20 + m.progress * 70) + '%';
-                        }
-                    }
-                });
+                text.textContent = `Processing image (${langNames[language]})...`; fill.style.width = '30%';
+
+                // For images, use higher quality processing
+                const img = await createImageBitmap(file);
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+
+                const result = await worker.recognize(canvas);
+                fill.style.width = '85%';
                 allText = result.data.text;
             }
 
+            await worker.terminate();
+
             fill.style.width = '95%'; text.textContent = 'Creating output...';
-            processedBlob = new Blob([allText.trim()], { type: 'text/plain' });
+
+            if (!allText.trim()) {
+                throw new Error('No text found in the document. Try selecting a different language.');
+            }
+
+            processedBlob = new Blob([allText.trim()], { type: 'text/plain; charset=utf-8' });
             outputFileName = 'extracted_text.txt';
         }
 
