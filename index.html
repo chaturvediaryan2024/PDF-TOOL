@@ -1450,7 +1450,7 @@
         });
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        const SERVER = 'http://localhost:3000';
+        const SERVER = ''; // same-origin: works on localhost and on the live host alike
         let currentTool = '', uploadedFiles = [], processedBlob = null, outputFileName = '', selectedPages = new Set(), signaturePad = null;
 
         const TOOLS = {
