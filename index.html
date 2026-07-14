@@ -1508,7 +1508,7 @@
             'compress-to-size': { title: 'Compress to Size', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Compress', out: 'compressed.pdf', server: false, icon: 'fa-bullseye', options: `<h4><i class="fas fa-bullseye"></i> Target Size</h4><div class="option-group"><label>Quick Select</label><div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem"><button type="button" class="size-btn" onclick="setTargetSize(50)">50 KB</button><button type="button" class="size-btn" onclick="setTargetSize(100)">100 KB</button><button type="button" class="size-btn" onclick="setTargetSize(200)">200 KB</button><button type="button" class="size-btn" onclick="setTargetSize(500)">500 KB</button><button type="button" class="size-btn" onclick="setTargetSize(1024)">1 MB</button></div></div><div class="option-row" style="margin-top:1rem"><div class="option-group"><label>Custom Size</label><input type="number" id="targetSize" value="100" min="10"></div><div class="option-group"><label>Unit</label><select id="sizeUnit"><option value="kb">KB</option><option value="mb">MB</option></select></div></div>` },
             'compress-image': { title: 'Compress Image', accept: 'image/*', multiple: true, hint: 'Select images', btn: 'Compress', out: 'compressed.zip', server: false, icon: 'fa-photo-video', options: `<h4><i class="fas fa-photo-video"></i> Target Size</h4><div class="option-group"><label>Quick Select</label><div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem"><button type="button" class="size-btn" onclick="setTargetSize(20)">20 KB</button><button type="button" class="size-btn" onclick="setTargetSize(50)">50 KB</button><button type="button" class="size-btn" onclick="setTargetSize(100)">100 KB</button><button type="button" class="size-btn" onclick="setTargetSize(200)">200 KB</button></div></div><div class="option-row" style="margin-top:1rem"><div class="option-group"><label>Custom Size</label><input type="number" id="targetSize" value="50" min="5"></div><div class="option-group"><label>Unit</label><select id="sizeUnit"><option value="kb">KB</option><option value="mb">MB</option></select></div></div><div class="option-group"><label>Format</label><select id="imgFormat"><option value="jpeg">JPG</option><option value="webp">WebP</option></select></div>` },
             'resize-image': { title: 'Resize Image', accept: 'image/*', multiple: true, hint: 'Select images', btn: 'Resize', out: 'resized.zip', server: false, icon: 'fa-expand-arrows-alt', options: `<h4><i class="fas fa-expand-arrows-alt"></i> Dimensions</h4><div class="option-row"><div class="option-group"><label>Width</label><input type="number" id="resizeWidth" value="800" min="10"></div><div class="option-group"><label>Height</label><input type="number" id="resizeHeight" value="600" min="10"></div></div><div class="option-group"><label><input type="checkbox" id="maintainRatio" checked> Keep aspect ratio</label></div>` },
-            'passport-photo': { title: 'Passport Photo', accept: 'image/*', multiple: false, hint: 'Select your photo', btn: 'Create', out: 'passport.jpg', server: false, icon: 'fa-id-card', options: `<h4><i class="fas fa-id-card"></i> Passport Photo</h4><div class="option-group"><label>Photo Size</label><select id="passportSize"><option value="35x45">35 × 45 mm (India / most countries)</option><option value="51x51">51 × 51 mm (US 2×2 inch)</option><option value="25x35">25 × 35 mm (small ID)</option><option value="33x48">33 × 48 mm (Schengen / EU)</option></select></div><div class="option-group"><label>Output</label><select id="passportOutput"><option value="single">Single photo</option><option value="sheet">Printable 4×6 sheet (multiple copies)</option></select></div><div class="option-group"><label>Background</label><select id="passportBg"><option value="keep">Keep original</option><option value="white">White</option></select></div><div class="option-group"><label>Target file size (KB) — optional, photo is compressed to fit</label><div class="option-row"><div class="option-group"><label>Min KB</label><input type="number" id="passportMinKb" placeholder="e.g. 20" min="1"></div><div class="option-group"><label>Max KB</label><input type="number" id="passportMaxKb" placeholder="e.g. 50" min="1"></div></div></div>` },
+            'passport-photo': { title: 'Passport Photo', accept: 'image/*', multiple: false, hint: 'Select your photo', btn: 'Create', out: 'passport.jpg', server: false, icon: 'fa-id-card', options: `<h4><i class="fas fa-id-card"></i> Passport Photo</h4><div class="option-group"><label>Photo Size</label><select id="passportSize"><option value="35x45">35 × 45 mm (India / most countries)</option><option value="51x51">51 × 51 mm (US 2×2 inch)</option><option value="25x35">25 × 35 mm (small ID)</option><option value="33x48">33 × 48 mm (Schengen / EU)</option></select></div><div class="option-group"><label>Output</label><select id="passportOutput"><option value="single">Single photo</option><option value="sheet">Printable 4×6 sheet (multiple copies)</option></select></div><div class="option-group"><label>Background</label><select id="passportBg"><option value="keep">Keep original</option><option value="white">White</option></select></div><div class="option-group"><label>Or exact size in pixels (overrides standard size above)</label><div class="option-row"><div class="option-group"><label>Width px</label><input type="number" id="passportPxW" placeholder="e.g. 150" min="20"></div><div class="option-group"><label>Height px</label><input type="number" id="passportPxH" placeholder="e.g. 200" min="20"></div></div></div>` },
             'repair': { title: 'Repair PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Repair', out: 'repaired.pdf', server: true, icon: 'fa-wrench' },
             'ocr': { title: 'OCR PDF', accept: '.pdf,image/*', multiple: false, hint: 'Select PDF or Image', btn: 'Extract Text', out: 'extracted.txt', server: false, icon: 'fa-eye' },
             'jpg-to-pdf': { title: 'JPG to PDF', accept: 'image/*', multiple: true, hint: 'Select images', btn: 'Convert', out: 'images.pdf', server: false, icon: 'fa-file-image' },
@@ -1960,30 +1960,16 @@
             ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
         }
 
-        // Encode a canvas to JPEG landing at the highest quality whose size is <= maxKb.
-        // If no maxKb given, just use high quality. minKb is a soft lower bound (best-effort).
-        async function encodeToSize(canvas, minKb, maxKb) {
-            if (!maxKb) return await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
-            const maxBytes = maxKb * 1024;
-            let lo = 0.05, hi = 0.95, best = null;
-            for (let i = 0; i < 9; i++) {
-                const q = (lo + hi) / 2;
-                const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', q));
-                if (blob.size <= maxBytes) { best = blob; lo = q; } else { hi = q; }
-            }
-            if (!best) best = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.05));
-            return best; // highest quality under the max — in practice also above the min
-        }
-
         async function passportPhoto(fill, text) {
             text.textContent = 'Loading photo...'; fill.style.width = '20%';
             const img = await createImageBitmap(uploadedFiles[0]);
-            const [wmm, hmm] = (gv('passportSize') || '35x45').split('x').map(Number);
             const DPI = 300, mm2px = mm => Math.round(mm / 25.4 * DPI);
-            const pw = mm2px(wmm), ph = mm2px(hmm);
             const output = gv('passportOutput') || 'single';
-            const minKb = parseInt(gv('passportMinKb')) || 0;
-            const maxKb = parseInt(gv('passportMaxKb')) || 0;
+            // Exact pixel size overrides the standard mm preset.
+            const pxW = parseInt(gv('passportPxW')) || 0, pxH = parseInt(gv('passportPxH')) || 0;
+            let pw, ph, sizeLabel;
+            if (pxW && pxH) { pw = pxW; ph = pxH; sizeLabel = `${pw}x${ph}px`; }
+            else { const [wmm, hmm] = (gv('passportSize') || '35x45').split('x').map(Number); pw = mm2px(wmm); ph = mm2px(hmm); sizeLabel = `${wmm}x${hmm}mm`; }
 
             // Build the single passport-sized photo.
             const photo = document.createElement('canvas'); photo.width = pw; photo.height = ph;
@@ -1993,7 +1979,7 @@
             pctx.strokeStyle = '#dddddd'; pctx.lineWidth = 2; pctx.strokeRect(1, 1, pw - 2, ph - 2);
             fill.style.width = '55%';
 
-            let canvas = photo, suffix = `${wmm}x${hmm}mm`;
+            let canvas = photo, suffix = sizeLabel;
             if (output === 'sheet') {
                 // Printable 4×6 inch sheet (portrait) with as many copies as fit.
                 text.textContent = 'Building print sheet...';
@@ -2011,11 +1997,11 @@
                 canvas = sheet; suffix = `sheet_${cols * rows}up`;
             }
 
-            text.textContent = maxKb ? 'Compressing to target size...' : 'Finishing...';
-            fill.style.width = '80%';
-            processedBlob = await encodeToSize(canvas, minKb, maxKb);
+            text.textContent = 'Finishing...';
+            fill.style.width = '85%';
+            processedBlob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95));
             fill.style.width = '95%';
-            outputFileName = `passport_${suffix}_${Math.round(processedBlob.size / 1024)}kb.jpg`;
+            outputFileName = `passport_${suffix}.jpg`;
         }
 
         async function resizeImages(fill, text) {
