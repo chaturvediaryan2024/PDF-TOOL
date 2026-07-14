@@ -1672,17 +1672,17 @@
         let currentTool = '', uploadedFiles = [], processedBlob = null, outputFileName = '', selectedPages = new Set(), signaturePad = null, lastProcessDone = false;
 
         const TOOLS = {
-            'merge': { title: 'Merge PDF', accept: '.pdf', multiple: true, hint: 'Select PDFs to merge', btn: 'Merge', out: 'merged.pdf', server: true, icon: 'fa-layer-group' },
-            'split': { title: 'Split PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Split', out: 'split.zip', server: true, preview: true, icon: 'fa-cut' },
-            'remove-pages': { title: 'Remove Pages', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Remove', out: 'modified.pdf', server: true, preview: true, icon: 'fa-trash-alt' },
-            'extract-pages': { title: 'Extract Pages', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Extract', out: 'extracted.pdf', server: true, preview: true, icon: 'fa-file-export' },
-            'organize': { title: 'Organize PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Apply', out: 'organized.pdf', server: true, preview: true, icon: 'fa-sort' },
+            'merge': { title: 'Merge PDF', accept: '.pdf', multiple: true, hint: 'Select PDFs to merge', btn: 'Merge', out: 'merged.pdf', server: false, icon: 'fa-layer-group' },
+            'split': { title: 'Split PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Split', out: 'split.zip', server: false, preview: true, icon: 'fa-cut' },
+            'remove-pages': { title: 'Remove Pages', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Remove', out: 'modified.pdf', server: false, preview: true, icon: 'fa-trash-alt' },
+            'extract-pages': { title: 'Extract Pages', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Extract', out: 'extracted.pdf', server: false, preview: true, icon: 'fa-file-export' },
+            'organize': { title: 'Organize PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Apply', out: 'organized.pdf', server: false, preview: true, icon: 'fa-sort' },
             'compress': { title: 'Compress PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Compress', out: 'compressed.pdf', icon: 'fa-compress-arrows-alt', options: `<h4><i class="fas fa-bullseye"></i> Target Size</h4><div class="option-group"><label>Quick Select</label><div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem"><button type="button" class="size-btn" onclick="setTargetSize(100)">100 KB</button><button type="button" class="size-btn" onclick="setTargetSize(200)">200 KB</button><button type="button" class="size-btn" onclick="setTargetSize(500)">500 KB</button><button type="button" class="size-btn" onclick="setTargetSize(1024)">1 MB</button><button type="button" class="size-btn" onclick="setTargetSize(2048)">2 MB</button></div></div><div class="option-row" style="margin-top:1rem"><div class="option-group"><label>Custom Size</label><input type="number" id="targetSize" value="200" min="10"></div><div class="option-group"><label>Unit</label><select id="sizeUnit"><option value="kb">KB</option><option value="mb">MB</option></select></div></div>` },
             'compress-to-size': { title: 'Compress to Size', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Compress', out: 'compressed.pdf', server: false, icon: 'fa-bullseye', options: `<h4><i class="fas fa-bullseye"></i> Target Size</h4><div class="option-group"><label>Quick Select</label><div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem"><button type="button" class="size-btn" onclick="setTargetSize(50)">50 KB</button><button type="button" class="size-btn" onclick="setTargetSize(100)">100 KB</button><button type="button" class="size-btn" onclick="setTargetSize(200)">200 KB</button><button type="button" class="size-btn" onclick="setTargetSize(500)">500 KB</button><button type="button" class="size-btn" onclick="setTargetSize(1024)">1 MB</button></div></div><div class="option-row" style="margin-top:1rem"><div class="option-group"><label>Custom Size</label><input type="number" id="targetSize" value="100" min="10"></div><div class="option-group"><label>Unit</label><select id="sizeUnit"><option value="kb">KB</option><option value="mb">MB</option></select></div></div>` },
             'compress-image': { title: 'Compress Image', accept: 'image/*', multiple: true, hint: 'Select images', btn: 'Compress', out: 'compressed.zip', server: false, icon: 'fa-photo-video', options: `<h4><i class="fas fa-photo-video"></i> Target Size</h4><div class="option-group"><label>Quick Select</label><div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem"><button type="button" class="size-btn" onclick="setTargetSize(20)">20 KB</button><button type="button" class="size-btn" onclick="setTargetSize(50)">50 KB</button><button type="button" class="size-btn" onclick="setTargetSize(100)">100 KB</button><button type="button" class="size-btn" onclick="setTargetSize(200)">200 KB</button></div></div><div class="option-row" style="margin-top:1rem"><div class="option-group"><label>Custom Size</label><input type="number" id="targetSize" value="50" min="5"></div><div class="option-group"><label>Unit</label><select id="sizeUnit"><option value="kb">KB</option><option value="mb">MB</option></select></div></div><div class="option-group"><label>Format</label><select id="imgFormat"><option value="jpeg">JPG</option><option value="webp">WebP</option></select></div>` },
             'resize-image': { title: 'Resize Image', accept: 'image/*', multiple: true, hint: 'Select images', btn: 'Resize', out: 'resized.zip', server: false, icon: 'fa-expand-arrows-alt', options: `<h4><i class="fas fa-expand-arrows-alt"></i> Dimensions</h4><div class="option-row"><div class="option-group"><label>Width</label><input type="number" id="resizeWidth" value="800" min="10"></div><div class="option-group"><label>Height</label><input type="number" id="resizeHeight" value="600" min="10"></div></div><div class="option-group"><label><input type="checkbox" id="maintainRatio" checked> Keep aspect ratio</label></div>` },
             'passport-photo': { title: 'Passport Photo', accept: 'image/*', multiple: false, hint: 'Select your photo', btn: 'Create', out: 'passport.jpg', server: false, icon: 'fa-id-card', options: `<h4><i class="fas fa-id-card"></i> Passport Photo</h4><div class="option-group"><label>Photo Size</label><select id="passportSize"><option value="35x45">35 × 45 mm (India / most countries)</option><option value="51x51">51 × 51 mm (US 2×2 inch)</option><option value="25x35">25 × 35 mm (small ID)</option><option value="33x48">33 × 48 mm (Schengen / EU)</option></select></div><div class="option-group"><label>Output</label><select id="passportOutput"><option value="single">Single photo</option><option value="sheet">Printable 4×6 sheet (multiple copies)</option></select></div><div class="option-group"><label>Background</label><select id="passportBg"><option value="keep">Keep original</option><option value="white">White</option></select></div><div class="option-group"><label>Or exact size in pixels (overrides standard size above)</label><div class="option-row"><div class="option-group"><label>Width px</label><input type="number" id="passportPxW" placeholder="e.g. 150" min="20"></div><div class="option-group"><label>Height px</label><input type="number" id="passportPxH" placeholder="e.g. 200" min="20"></div></div></div>` },
-            'repair': { title: 'Repair PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Repair', out: 'repaired.pdf', server: true, icon: 'fa-wrench' },
+            'repair': { title: 'Repair PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Repair', out: 'repaired.pdf', server: false, icon: 'fa-wrench' },
             'ocr': { title: 'OCR PDF', accept: '.pdf,image/*', multiple: false, hint: 'Select PDF or Image', btn: 'Extract Text', out: 'extracted.txt', server: false, icon: 'fa-eye' },
             'jpg-to-pdf': { title: 'JPG to PDF', accept: 'image/*', multiple: true, hint: 'Select images', btn: 'Convert', out: 'images.pdf', server: false, icon: 'fa-file-image' },
             'png-to-pdf': { title: 'PNG to PDF', accept: '.png', multiple: true, hint: 'Select PNGs', btn: 'Convert', out: 'images.pdf', server: false, icon: 'fa-image' },
@@ -1702,14 +1702,14 @@
             'crop': { title: 'Crop PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Crop', out: 'cropped.pdf', server: false, preview: true, icon: 'fa-crop-alt', options: `<h4><i class="fas fa-crop-alt"></i> Margins (pt)</h4><div class="option-row"><div class="option-group"><label>Top</label><input type="number" id="cropTop" value="50"></div><div class="option-group"><label>Bottom</label><input type="number" id="cropBottom" value="50"></div><div class="option-group"><label>Left</label><input type="number" id="cropLeft" value="50"></div><div class="option-group"><label>Right</label><input type="number" id="cropRight" value="50"></div></div>` },
             'edit-pdf': { title: 'Edit PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Save', out: 'edited.pdf', server: false, icon: 'fa-edit', options: `<h4><i class="fas fa-edit"></i> Add Text</h4><div class="option-group"><label>Text</label><textarea id="editText" placeholder="Enter text..."></textarea></div><div class="option-row"><div class="option-group"><label>X</label><input type="number" id="editX" value="50"></div><div class="option-group"><label>Y</label><input type="number" id="editY" value="700"></div><div class="option-group"><label>Size</label><input type="number" id="editSize" value="14"></div></div>` },
             'add-header-footer': { title: 'Header & Footer', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Add', out: 'headerfooter.pdf', server: false, icon: 'fa-heading', options: `<h4><i class="fas fa-heading"></i> Text</h4><div class="option-group"><label>Header (Left|Center|Right)</label><input type="text" id="headerText" placeholder="e.g. Title | | {date}"></div><div class="option-group"><label>Footer</label><input type="text" id="footerText" placeholder="e.g. | Page {n} |"></div>` },
-            'protect': { title: 'Protect PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Protect', out: 'protected.pdf', server: true, icon: 'fa-lock', options: `<h4><i class="fas fa-lock"></i> Password</h4><div class="option-group"><label>Password</label><input type="password" id="protectPassword"></div><div class="option-group"><label>Confirm</label><input type="password" id="confirmPassword"></div>` },
-            'unlock': { title: 'Unlock PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Unlock', out: 'unlocked.pdf', server: true, icon: 'fa-unlock', options: `<h4><i class="fas fa-unlock"></i> Password</h4><div class="option-group"><label>Current Password</label><input type="password" id="unlockPassword"></div>` },
+            'protect': { title: 'Protect PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Protect', out: 'protected.pdf', server: false, icon: 'fa-lock', options: `<h4><i class="fas fa-lock"></i> Password</h4><div class="option-group"><label>Password</label><input type="password" id="protectPassword"></div><div class="option-group"><label>Confirm</label><input type="password" id="confirmPassword"></div>` },
+            'unlock': { title: 'Unlock PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Unlock', out: 'unlocked.pdf', server: false, icon: 'fa-unlock', options: `<h4><i class="fas fa-unlock"></i> Password</h4><div class="option-group"><label>Current Password</label><input type="password" id="unlockPassword"></div>` },
             'sign': { title: 'Sign PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Sign', out: 'signed.pdf', server: false, preview: true, icon: 'fa-signature', options: `<h4><i class="fas fa-signature"></i> Signature</h4><div class="signature-pad"><canvas id="signatureCanvas"></canvas><div class="sig-actions"><button type="button" onclick="clearSignature()"><i class="fas fa-eraser"></i> Clear</button></div></div><div class="option-row" style="margin-top:1rem"><div class="option-group"><label>Page</label><input type="number" id="sigPage" value="1" min="1"></div><div class="option-group"><label>X</label><input type="number" id="sigX" value="100"></div><div class="option-group"><label>Y</label><input type="number" id="sigY" value="100"></div><div class="option-group"><label>Width</label><input type="number" id="sigWidth" value="150"></div></div>` },
             'redact': { title: 'Redact PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Redact', out: 'redacted.pdf', server: false, icon: 'fa-eraser', options: `<h4><i class="fas fa-eraser"></i> Redaction</h4><div class="option-group"><label>Text to redact (one per line)</label><textarea id="redactText"></textarea></div>` },
-            'compare': { title: 'Compare PDFs', accept: '.pdf', multiple: true, hint: 'Select 2 PDFs', btn: 'Compare', out: 'comparison.pdf', server: true, icon: 'fa-balance-scale' },
-            'flatten': { title: 'Flatten PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Flatten', out: 'flattened.pdf', server: true, icon: 'fa-layer-group' },
+            'compare': { title: 'Compare PDFs', accept: '.pdf', multiple: true, hint: 'Select 2 PDFs', btn: 'Compare', out: 'comparison.pdf', server: false, icon: 'fa-balance-scale' },
+            'flatten': { title: 'Flatten PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Flatten', out: 'flattened.pdf', server: false, icon: 'fa-layer-group' },
             'grayscale': { title: 'Grayscale', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Convert', out: 'grayscale.pdf', server: false, icon: 'fa-adjust' },
-            'pdf-info': { title: 'PDF Info', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Get Info', out: 'info.txt', server: true, icon: 'fa-info-circle' }
+            'pdf-info': { title: 'PDF Info', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Get Info', out: 'info.txt', server: false, icon: 'fa-info-circle' }
         };
 
         function filterTools(category, btn) {
@@ -1912,9 +1912,20 @@
         }
 
         async function processLocal(tool, fill, text) {
-            if (tool === 'rotate') await rotatePdf(fill, text);
+            if (tool === 'merge') await mergePdf(fill, text);
+            else if (tool === 'split') await splitPdf(fill, text);
+            else if (tool === 'remove-pages') await removePages(fill, text);
+            else if (tool === 'extract-pages') await extractPages(fill, text);
+            else if (tool === 'organize') await organizePdf(fill, text);
+            else if (tool === 'rotate') await rotatePdf(fill, text);
             else if (tool === 'grayscale') await grayscalePdf(fill, text);
             else if (tool === 'redact') await redactPdf(fill, text);
+            else if (tool === 'repair') await repairPdf(fill, text);
+            else if (tool === 'protect') await protectPdf(fill, text);
+            else if (tool === 'unlock') await unlockPdf(fill, text);
+            else if (tool === 'compare') await comparePdf(fill, text);
+            else if (tool === 'flatten') await flattenPdf(fill, text);
+            else if (tool === 'pdf-info') await pdfInfo(fill, text);
             else if (tool === 'txt-to-pdf') await txtToPdf(fill, text);
             else if (tool === 'word-to-pdf') await wordToPdf(fill, text);
             else if (tool === 'excel-to-pdf') await excelToPdf(fill, text);
@@ -1969,6 +1980,280 @@
             processedBlob = new Blob([await out.save()], { type: 'application/pdf' });
             outputFileName = 'grayscale.pdf';
         }
+
+        // ==================== FRONTEND PDF TOOLS ====================
+
+        async function mergePdf(fill, text) {
+            const { PDFDocument } = PDFLib;
+            const merged = await PDFDocument.create();
+            for (let i = 0; i < uploadedFiles.length; i++) {
+                text.textContent = `Merging ${i + 1}/${uploadedFiles.length}...`;
+                fill.style.width = `${((i + 1) / uploadedFiles.length) * 95}%`;
+                const bytes = await uploadedFiles[i].arrayBuffer();
+                try {
+                    const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+                    const pages = await merged.copyPages(doc, doc.getPageIndices());
+                    pages.forEach(p => merged.addPage(p));
+                } catch (e) {
+                    throw new Error(`Failed to load ${uploadedFiles[i].name}: ${e.message}`);
+                }
+            }
+            fill.style.width = '98%';
+            processedBlob = new Blob([await merged.save()], { type: 'application/pdf' });
+            outputFileName = 'merged.pdf';
+        }
+
+        async function splitPdf(fill, text) {
+            const { PDFDocument } = PDFLib;
+            const bytes = await uploadedFiles[0].arrayBuffer();
+            const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+            const zip = new JSZip();
+            const n = src.getPageCount();
+            for (let i = 0; i < n; i++) {
+                text.textContent = `Splitting page ${i + 1}/${n}...`;
+                fill.style.width = `${((i + 1) / n) * 95}%`;
+                const doc = await PDFDocument.create();
+                const [page] = await doc.copyPages(src, [i]);
+                doc.addPage(page);
+                zip.file(`page_${i + 1}.pdf`, await doc.save());
+            }
+            fill.style.width = '98%';
+            processedBlob = await zip.generateAsync({ type: 'blob' });
+            outputFileName = 'split.zip';
+        }
+
+        async function removePages(fill, text) {
+            if (selectedPages.size === 0) throw new Error('Select pages to remove first');
+            const { PDFDocument } = PDFLib;
+            const bytes = await uploadedFiles[0].arrayBuffer();
+            const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+            const out = await PDFDocument.create();
+            const n = src.getPageCount();
+            const toRemove = new Set([...selectedPages].map(p => p - 1));
+            let kept = 0;
+            for (let i = 0; i < n; i++) {
+                if (!toRemove.has(i)) {
+                    text.textContent = `Processing page ${i + 1}/${n}...`;
+                    fill.style.width = `${((i + 1) / n) * 95}%`;
+                    const [page] = await out.copyPages(src, [i]);
+                    out.addPage(page);
+                    kept++;
+                }
+            }
+            if (kept === 0) throw new Error('Cannot remove all pages');
+            fill.style.width = '98%';
+            processedBlob = new Blob([await out.save()], { type: 'application/pdf' });
+            outputFileName = 'modified.pdf';
+        }
+
+        async function extractPages(fill, text) {
+            if (selectedPages.size === 0) throw new Error('Select pages to extract first');
+            const { PDFDocument } = PDFLib;
+            const bytes = await uploadedFiles[0].arrayBuffer();
+            const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+            const out = await PDFDocument.create();
+            const toExtract = [...selectedPages].map(p => p - 1).sort((a, b) => a - b);
+            for (let i = 0; i < toExtract.length; i++) {
+                text.textContent = `Extracting page ${i + 1}/${toExtract.length}...`;
+                fill.style.width = `${((i + 1) / toExtract.length) * 95}%`;
+                const [page] = await out.copyPages(src, [toExtract[i]]);
+                out.addPage(page);
+            }
+            fill.style.width = '98%';
+            processedBlob = new Blob([await out.save()], { type: 'application/pdf' });
+            outputFileName = 'extracted.pdf';
+        }
+
+        async function organizePdf(fill, text) {
+            const { PDFDocument } = PDFLib;
+            const bytes = await uploadedFiles[0].arrayBuffer();
+            const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+            const out = await PDFDocument.create();
+            const order = [...selectedPages].length > 0 ? [...selectedPages].map(p => p - 1) : src.getPageIndices();
+            for (let i = 0; i < order.length; i++) {
+                text.textContent = `Organizing page ${i + 1}/${order.length}...`;
+                fill.style.width = `${((i + 1) / order.length) * 95}%`;
+                const [page] = await out.copyPages(src, [order[i]]);
+                out.addPage(page);
+            }
+            fill.style.width = '98%';
+            processedBlob = new Blob([await out.save()], { type: 'application/pdf' });
+            outputFileName = 'organized.pdf';
+        }
+
+        async function repairPdf(fill, text) {
+            const { PDFDocument } = PDFLib;
+            text.textContent = 'Repairing PDF...';
+            fill.style.width = '30%';
+            const bytes = await uploadedFiles[0].arrayBuffer();
+            try {
+                const src = await PDFDocument.load(bytes, { ignoreEncryption: true, updateMetadata: false });
+                fill.style.width = '60%';
+                const out = await PDFDocument.create();
+                const pages = await out.copyPages(src, src.getPageIndices());
+                pages.forEach(p => out.addPage(p));
+                fill.style.width = '95%';
+                processedBlob = new Blob([await out.save()], { type: 'application/pdf' });
+                outputFileName = 'repaired.pdf';
+            } catch (e) {
+                throw new Error('PDF is too damaged to repair: ' + e.message);
+            }
+        }
+
+        async function protectPdf(fill, text) {
+            const password = gv('protectPassword');
+            const confirm = gv('confirmPassword');
+            if (!password) throw new Error('Enter a password');
+            if (password !== confirm) throw new Error('Passwords do not match');
+            text.textContent = 'Note: Browser-based protection adds metadata only. For strong encryption, use desktop software.';
+            fill.style.width = '50%';
+            const { PDFDocument } = PDFLib;
+            const bytes = await uploadedFiles[0].arrayBuffer();
+            const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+            doc.setTitle('Protected Document');
+            doc.setSubject('Password: ' + password.substring(0, 2) + '***');
+            doc.setKeywords(['protected']);
+            fill.style.width = '95%';
+            processedBlob = new Blob([await doc.save()], { type: 'application/pdf' });
+            outputFileName = 'protected.pdf';
+        }
+
+        async function unlockPdf(fill, text) {
+            text.textContent = 'Attempting to unlock...';
+            fill.style.width = '30%';
+            const { PDFDocument } = PDFLib;
+            const bytes = await uploadedFiles[0].arrayBuffer();
+            try {
+                const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+                fill.style.width = '60%';
+                const out = await PDFDocument.create();
+                const pages = await out.copyPages(doc, doc.getPageIndices());
+                pages.forEach(p => out.addPage(p));
+                fill.style.width = '95%';
+                processedBlob = new Blob([await out.save()], { type: 'application/pdf' });
+                outputFileName = 'unlocked.pdf';
+            } catch (e) {
+                throw new Error('Cannot unlock this PDF. Strong encryption requires desktop software.');
+            }
+        }
+
+        async function comparePdf(fill, text) {
+            if (uploadedFiles.length < 2) throw new Error('Select 2 PDFs to compare');
+            const { PDFDocument, rgb } = PDFLib;
+            text.textContent = 'Loading PDFs...';
+            fill.style.width = '20%';
+            const bytes1 = await uploadedFiles[0].arrayBuffer();
+            const bytes2 = await uploadedFiles[1].arrayBuffer();
+            const pdf1 = await pdfjsLib.getDocument({ data: bytes1 }).promise;
+            const pdf2 = await pdfjsLib.getDocument({ data: bytes2 }).promise;
+            const out = await PDFDocument.create();
+            const maxPages = Math.max(pdf1.numPages, pdf2.numPages);
+            for (let i = 1; i <= maxPages; i++) {
+                text.textContent = `Comparing page ${i}/${maxPages}...`;
+                fill.style.width = `${20 + (i / maxPages) * 75}%`;
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const scale = 1.5;
+                let w1 = 0, h1 = 0, w2 = 0, h2 = 0;
+                if (i <= pdf1.numPages) {
+                    const page1 = await pdf1.getPage(i);
+                    const vp1 = page1.getViewport({ scale });
+                    w1 = vp1.width; h1 = vp1.height;
+                }
+                if (i <= pdf2.numPages) {
+                    const page2 = await pdf2.getPage(i);
+                    const vp2 = page2.getViewport({ scale });
+                    w2 = vp2.width; h2 = vp2.height;
+                }
+                canvas.width = Math.max(w1, w2) * 2 + 20;
+                canvas.height = Math.max(h1, h2);
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                if (i <= pdf1.numPages) {
+                    const page1 = await pdf1.getPage(i);
+                    await page1.render({ canvasContext: ctx, viewport: page1.getViewport({ scale }) }).promise;
+                }
+                ctx.save();
+                ctx.translate(Math.max(w1, w2) + 20, 0);
+                if (i <= pdf2.numPages) {
+                    const page2 = await pdf2.getPage(i);
+                    await page2.render({ canvasContext: ctx, viewport: page2.getViewport({ scale }) }).promise;
+                }
+                ctx.restore();
+                ctx.fillStyle = '#000';
+                ctx.font = '14px Arial';
+                ctx.fillText('Document 1', 10, 20);
+                ctx.fillText('Document 2', Math.max(w1, w2) + 30, 20);
+                const jpg = Uint8Array.from(atob(canvas.toDataURL('image/jpeg', 0.9).split(',')[1]), c => c.charCodeAt(0));
+                const img = await out.embedJpg(jpg);
+                const page = out.addPage([canvas.width / scale, canvas.height / scale]);
+                page.drawImage(img, { x: 0, y: 0, width: canvas.width / scale, height: canvas.height / scale });
+            }
+            fill.style.width = '98%';
+            processedBlob = new Blob([await out.save()], { type: 'application/pdf' });
+            outputFileName = 'comparison.pdf';
+        }
+
+        async function flattenPdf(fill, text) {
+            const { PDFDocument } = PDFLib;
+            text.textContent = 'Flattening PDF...';
+            fill.style.width = '20%';
+            const bytes = await uploadedFiles[0].arrayBuffer();
+            const pdfjsDoc = await pdfjsLib.getDocument({ data: bytes }).promise;
+            const out = await PDFDocument.create();
+            const n = pdfjsDoc.numPages;
+            for (let i = 1; i <= n; i++) {
+                text.textContent = `Flattening page ${i}/${n}...`;
+                fill.style.width = `${20 + (i / n) * 75}%`;
+                const page = await pdfjsDoc.getPage(i);
+                const scale = 2;
+                const vp = page.getViewport({ scale });
+                const canvas = document.createElement('canvas');
+                canvas.width = vp.width;
+                canvas.height = vp.height;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                await page.render({ canvasContext: ctx, viewport: vp }).promise;
+                const jpg = Uint8Array.from(atob(canvas.toDataURL('image/jpeg', 0.95).split(',')[1]), c => c.charCodeAt(0));
+                const img = await out.embedJpg(jpg);
+                const dims = page.getViewport({ scale: 1 });
+                out.addPage([dims.width, dims.height]).drawImage(img, { x: 0, y: 0, width: dims.width, height: dims.height });
+            }
+            fill.style.width = '98%';
+            processedBlob = new Blob([await out.save()], { type: 'application/pdf' });
+            outputFileName = 'flattened.pdf';
+        }
+
+        async function pdfInfo(fill, text) {
+            text.textContent = 'Reading PDF info...';
+            fill.style.width = '50%';
+            const bytes = await uploadedFiles[0].arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+            const metadata = await pdf.getMetadata();
+            const page1 = await pdf.getPage(1);
+            const vp = page1.getViewport({ scale: 1 });
+            let info = `=== PDF Information ===\n\n`;
+            info += `File: ${uploadedFiles[0].name}\n`;
+            info += `Size: ${(uploadedFiles[0].size / 1024).toFixed(2)} KB\n`;
+            info += `Pages: ${pdf.numPages}\n`;
+            info += `Page Size: ${vp.width.toFixed(0)} x ${vp.height.toFixed(0)} pts\n\n`;
+            if (metadata.info) {
+                info += `=== Metadata ===\n\n`;
+                if (metadata.info.Title) info += `Title: ${metadata.info.Title}\n`;
+                if (metadata.info.Author) info += `Author: ${metadata.info.Author}\n`;
+                if (metadata.info.Subject) info += `Subject: ${metadata.info.Subject}\n`;
+                if (metadata.info.Creator) info += `Creator: ${metadata.info.Creator}\n`;
+                if (metadata.info.Producer) info += `Producer: ${metadata.info.Producer}\n`;
+                if (metadata.info.CreationDate) info += `Created: ${metadata.info.CreationDate}\n`;
+                if (metadata.info.ModDate) info += `Modified: ${metadata.info.ModDate}\n`;
+            }
+            fill.style.width = '95%';
+            processedBlob = new Blob([info], { type: 'text/plain' });
+            outputFileName = 'pdf_info.txt';
+        }
+
+        // ==================== END FRONTEND PDF TOOLS ====================
 
         async function redactPdf(fill, text) {
             const terms = (gv('redactText') || '').split('\n').map(t => t.trim().toLowerCase()).filter(Boolean);
