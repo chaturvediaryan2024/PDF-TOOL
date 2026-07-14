@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All in One Tool - Premium File Converter & Editor</title>
+    <title>Toolnova - Premium File Converter & Editor</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
@@ -20,9 +20,9 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --primary: #6366f1;
-            --primary-glow: rgba(99, 102, 241, 0.6);
-            --accent: #8b5cf6;
+            --primary: #ec4899;
+            --primary-glow: rgba(236, 72, 153, 0.6);
+            --accent: #a855f7;
             --bg-dark: #0a0a0f;
             --bg-card: rgba(255,255,255,0.03);
             --bg-card-hover: rgba(255,255,255,0.06);
@@ -69,8 +69,8 @@
             width: 100%;
             height: 100%;
             background-image:
-                linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+                linear-gradient(rgba(168,85,247,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(168,85,247,0.03) 1px, transparent 1px);
             background-size: 60px 60px;
             mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
             -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
@@ -80,9 +80,9 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.12) 0%, transparent 50%),
-                        radial-gradient(ellipse at 80% 50%, rgba(139,92,246,0.08) 0%, transparent 40%),
-                        radial-gradient(ellipse at 20% 80%, rgba(99,102,241,0.06) 0%, transparent 40%);
+            background: radial-gradient(ellipse at 50% 0%, rgba(168,85,247,0.12) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 50%, rgba(168,85,247,0.08) 0%, transparent 40%),
+                        radial-gradient(ellipse at 20% 80%, rgba(168,85,247,0.06) 0%, transparent 40%);
         }
 
         /* Mouse Following Orb - Slow glow */
@@ -90,7 +90,7 @@
             position: fixed;
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, rgba(56,189,248,0.2) 0%, rgba(99,102,241,0.1) 30%, transparent 60%);
+            background: radial-gradient(circle, rgba(236,72,153,0.2) 0%, rgba(168,85,247,0.1) 30%, transparent 60%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 1;
@@ -103,12 +103,12 @@
             position: fixed;
             width: 16px;
             height: 16px;
-            background: radial-gradient(circle, #67e8f9 0%, #38bdf8 40%, #6366f1 80%, transparent 100%);
+            background: radial-gradient(circle, #f0abfc 0%, #ec4899 40%, #a855f7 80%, transparent 100%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 1000001;
             transform: translate(-50%, -50%);
-            box-shadow: 0 0 20px rgba(56,189,248,1), 0 0 40px rgba(56,189,248,0.8), 0 0 60px rgba(99,102,241,0.6), 0 0 80px rgba(99,102,241,0.4);
+            box-shadow: 0 0 20px rgba(236,72,153,1), 0 0 40px rgba(236,72,153,0.8), 0 0 60px rgba(168,85,247,0.6), 0 0 80px rgba(168,85,247,0.4);
         }
         .center-dot::before {
             content: '';
@@ -120,18 +120,18 @@
             background: #fff;
             border-radius: 50%;
             transform: translate(-50%, -50%);
-            box-shadow: 0 0 8px #fff, 0 0 15px #67e8f9;
+            box-shadow: 0 0 8px #fff, 0 0 15px #f0abfc;
         }
         .center-dot.hover {
             width: 28px;
             height: 28px;
-            background: radial-gradient(circle, #67e8f9 0%, #38bdf8 30%, #6366f1 60%, transparent 100%);
-            box-shadow: 0 0 25px rgba(103,232,249,1), 0 0 50px rgba(56,189,248,1), 0 0 80px rgba(99,102,241,0.8), 0 0 120px rgba(99,102,241,0.5);
+            background: radial-gradient(circle, #f0abfc 0%, #ec4899 30%, #a855f7 60%, transparent 100%);
+            box-shadow: 0 0 25px rgba(240,171,252,1), 0 0 50px rgba(236,72,153,1), 0 0 80px rgba(168,85,247,0.8), 0 0 120px rgba(168,85,247,0.5);
             animation: pulseGlow 0.8s ease-in-out infinite;
         }
         @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 25px rgba(103,232,249,1), 0 0 50px rgba(56,189,248,1), 0 0 80px rgba(99,102,241,0.8), 0 0 120px rgba(99,102,241,0.5); }
-            50% { box-shadow: 0 0 35px rgba(103,232,249,1), 0 0 70px rgba(56,189,248,1), 0 0 100px rgba(99,102,241,0.9), 0 0 150px rgba(99,102,241,0.6); }
+            0%, 100% { box-shadow: 0 0 25px rgba(240,171,252,1), 0 0 50px rgba(236,72,153,1), 0 0 80px rgba(168,85,247,0.8), 0 0 120px rgba(168,85,247,0.5); }
+            50% { box-shadow: 0 0 35px rgba(240,171,252,1), 0 0 70px rgba(236,72,153,1), 0 0 100px rgba(168,85,247,0.9), 0 0 150px rgba(168,85,247,0.6); }
         }
 
         /* Dot Trail */
@@ -139,12 +139,12 @@
             position: fixed;
             width: 8px;
             height: 8px;
-            background: radial-gradient(circle, rgba(103,232,249,0.9) 0%, rgba(56,189,248,0.6) 50%, transparent 80%);
+            background: radial-gradient(circle, rgba(240,171,252,0.9) 0%, rgba(236,72,153,0.6) 50%, transparent 80%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 999999;
             transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px rgba(56,189,248,0.8), 0 0 20px rgba(99,102,241,0.5);
+            box-shadow: 0 0 10px rgba(236,72,153,0.8), 0 0 20px rgba(168,85,247,0.5);
         }
 
         /* Mouse Trail Glow Dots - Quick fade, bigger */
@@ -152,11 +152,11 @@
             position: fixed;
             width: 10px;
             height: 10px;
-            background: radial-gradient(circle, rgba(103,232,249,1) 0%, rgba(56,189,248,0.6) 50%, transparent 100%);
+            background: radial-gradient(circle, rgba(240,171,252,1) 0%, rgba(236,72,153,0.6) 50%, transparent 100%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 1000000;
-            box-shadow: 0 0 8px rgba(103,232,249,0.9), 0 0 15px rgba(56,189,248,0.6);
+            box-shadow: 0 0 8px rgba(240,171,252,0.9), 0 0 15px rgba(236,72,153,0.6);
             transform: translate(-50%, -50%);
             animation: mouseStarFade 0.4s ease-out forwards;
         }
@@ -186,11 +186,11 @@
             transform: translate(-50%, -50%);
         }
         .click-burst::before {
-            border: 2px solid #38bdf8;
+            border: 2px solid #ec4899;
             animation: burstRing 0.8s ease-out forwards;
         }
         .click-burst::after {
-            background: radial-gradient(circle, rgba(56,189,248,0.5) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(236,72,153,0.5) 0%, transparent 70%);
             animation: burstGlow 0.8s ease-out forwards;
         }
         @keyframes burstRing {
@@ -215,7 +215,7 @@
             height: 4px;
             background: #fff;
             border-radius: 50%;
-            box-shadow: 0 0 8px 3px rgba(56,189,248,0.9), 0 0 20px 6px rgba(99,102,241,0.5);
+            box-shadow: 0 0 8px 3px rgba(236,72,153,0.9), 0 0 20px 6px rgba(168,85,247,0.5);
             opacity: 0;
         }
         .shooting-star::before {
@@ -225,7 +225,7 @@
             right: 100%;
             width: 120px;
             height: 1.5px;
-            background: linear-gradient(90deg, transparent 0%, rgba(56,189,248,0.2) 40%, rgba(99,102,241,0.6) 70%, rgba(255,255,255,0.9) 100%);
+            background: linear-gradient(90deg, transparent 0%, rgba(236,72,153,0.2) 40%, rgba(168,85,247,0.6) 70%, rgba(255,255,255,0.9) 100%);
             transform: translateY(-50%);
         }
         .shooting-star.animate {
@@ -242,9 +242,9 @@
             position: absolute;
             width: 3px;
             height: 3px;
-            background: rgba(56,189,248,0.8);
+            background: rgba(236,72,153,0.8);
             border-radius: 50%;
-            box-shadow: 0 0 8px rgba(56,189,248,0.6), 0 0 15px rgba(99,102,241,0.3);
+            box-shadow: 0 0 8px rgba(236,72,153,0.6), 0 0 15px rgba(168,85,247,0.3);
             animation: twinkle ease-in-out infinite;
         }
         @keyframes twinkle {
@@ -257,7 +257,7 @@
             position: fixed;
             width: 200px;
             height: 200px;
-            background: radial-gradient(circle, rgba(56,189,248,0.6) 0%, rgba(99,102,241,0.3) 40%, transparent 70%);
+            background: radial-gradient(circle, rgba(236,72,153,0.6) 0%, rgba(168,85,247,0.3) 40%, transparent 70%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 5;
@@ -416,15 +416,15 @@
         }
 
         /* Icon colors */
-        .icon-merge { background: #6366f1; color: white; }
+        .icon-merge { background: #a855f7; color: white; }
         .icon-split { background: #ec4899; color: white; }
         .icon-compress { background: #06b6d4; color: white; }
         .icon-jpg { background: #f59e0b; color: white; }
         .icon-word { background: #2563eb; color: white; }
         .icon-excel { background: #059669; color: white; }
         .icon-ppt { background: #dc2626; color: white; }
-        .icon-edit { background: #8b5cf6; color: white; }
-        .icon-lock { background: #6366f1; color: white; }
+        .icon-edit { background: #a855f7; color: white; }
+        .icon-lock { background: #a855f7; color: white; }
 
         .nav-right { display: flex; align-items: center; gap: 1rem; }
         #authButtons { display: flex; align-items: center; gap: 1.25rem; }
@@ -439,7 +439,7 @@
             font-weight: 600;
             transition: all 0.3s;
         }
-        .btn-signup:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(99,102,241,0.3); }
+        .btn-signup:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(168,85,247,0.3); }
 
         /* User Profile */
         .user-avatar {
@@ -448,7 +448,7 @@
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: all 0.3s;
         }
-        .user-avatar:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(99,102,241,0.4); }
+        .user-avatar:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(168,85,247,0.4); }
         .user-menu {
             position: absolute; top: 100%; right: 0; margin-top: 10px;
             background: rgba(20,20,30,0.98); border: 1px solid var(--border);
@@ -474,7 +474,7 @@
             background: linear-gradient(135deg, rgba(20,20,30,0.98), rgba(15,15,25,0.98));
             border: 1px solid var(--border); border-radius: 24px;
             width: 100%; max-width: 420px; padding: 2.5rem;
-            position: relative; box-shadow: 0 0 80px rgba(99,102,241,0.2);
+            position: relative; box-shadow: 0 0 80px rgba(168,85,247,0.2);
         }
         .auth-close {
             position: absolute; top: 1rem; right: 1rem;
@@ -500,13 +500,13 @@
             border: 1px solid var(--border); border-radius: 10px; color: var(--text);
             font-size: 1rem; transition: all 0.3s;
         }
-        .auth-input-group input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+        .auth-input-group input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(168,85,247,0.1); }
         .auth-submit {
             width: 100%; padding: 1rem; background: linear-gradient(135deg, var(--primary), var(--accent));
             border: none; border-radius: 10px; color: white; font-size: 1rem;
             font-weight: 600; cursor: pointer; transition: all 0.3s;
         }
-        .auth-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(99,102,241,0.3); }
+        .auth-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(168,85,247,0.3); }
         .auth-divider { text-align: center; margin: 1.5rem 0; color: var(--text-muted); position: relative; }
         .auth-divider::before, .auth-divider::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: var(--border); }
         .auth-divider::before { left: 0; }
@@ -550,13 +550,19 @@
             animation: pulse 2s infinite;
         }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes heroGradient { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        .hero-badge { animation: fadeUp 0.7s ease both; }
         .hero h1 {
             font-size: 3.5rem;
             font-weight: 800;
             margin-bottom: 1.5rem;
-            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+            background: linear-gradient(120deg, #ec4899 0%, #a855f7 35%, #f0abfc 65%, #ec4899 100%);
+            background-size: 300% 100%;
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
+            animation: fadeUp 0.7s ease 0.1s both, heroGradient 7s ease infinite;
         }
         .hero p {
             font-size: 1.15rem;
@@ -564,6 +570,7 @@
             max-width: 600px;
             margin: 0 auto 3rem;
             line-height: 1.8;
+            animation: fadeUp 0.7s ease 0.2s both;
         }
 
         /* Filter Tabs */
@@ -647,9 +654,9 @@
         }
         .tool-card:hover {
             background: var(--bg-card-hover);
-            border-color: rgba(99,102,241,0.3);
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border-color: rgba(236,72,153,0.4);
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.35), 0 0 28px rgba(236,72,153,0.18);
         }
         .tool-card:hover::before { opacity: 1; }
         .tool-card.hidden { display: none; }
@@ -664,17 +671,17 @@
             font-size: 1.3rem;
             transition: transform 0.3s;
         }
-        .tool-card:hover .icon { transform: scale(1.1); }
+        .tool-card:hover .icon { transform: scale(1.12) rotate(-4deg); box-shadow: 0 8px 20px rgba(236,72,153,0.35); }
         .tool-card h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
         .tool-card p { font-size: 0.8rem; color: var(--text-muted); }
 
         /* Icon backgrounds */
-        .bg-merge { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
+        .bg-merge { background: linear-gradient(135deg, #a855f7, #a855f7); color: white; }
         .bg-split { background: linear-gradient(135deg, #ec4899, #f43f5e); color: white; }
         .bg-compress { background: linear-gradient(135deg, #06b6d4, #0ea5e9); color: white; }
         .bg-convert { background: linear-gradient(135deg, #10b981, #34d399); color: white; }
         .bg-edit { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #1a1a1a; }
-        .bg-security { background: linear-gradient(135deg, #8b5cf6, #a855f7); color: white; }
+        .bg-security { background: linear-gradient(135deg, #a855f7, #a855f7); color: white; }
         .bg-image { background: linear-gradient(135deg, #f472b6, #ec4899); color: white; }
         .bg-word { background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; }
         .bg-excel { background: linear-gradient(135deg, #059669, #10b981); color: white; }
@@ -748,7 +755,7 @@
         }
         .upload-zone:hover, .upload-zone.dragover {
             border-color: var(--primary);
-            background: rgba(99,102,241,0.05);
+            background: rgba(168,85,247,0.05);
         }
         .upload-zone i { font-size: 3rem; color: var(--primary); margin-bottom: 1rem; }
         .upload-zone h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
@@ -763,7 +770,7 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        .upload-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(99,102,241,0.3); }
+        .upload-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(168,85,247,0.3); }
 
         /* File List */
         .file-list { margin-top: 1.5rem; }
@@ -805,9 +812,9 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 10px 30px rgba(99,102,241,0.3);
+            box-shadow: 0 10px 30px rgba(168,85,247,0.3);
         }
-        .process-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(99,102,241,0.4); }
+        .process-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(168,85,247,0.4); }
         .process-btn:disabled { background: #333; color: #666; box-shadow: none; cursor: not-allowed; transform: none; }
         .action-area .download-btn { padding: 1rem 2rem; font-size: 1rem; }
 
@@ -915,7 +922,7 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        .size-btn:hover, .size-btn.active { border-color: var(--primary); background: rgba(99,102,241,0.1); color: var(--primary); }
+        .size-btn:hover, .size-btn.active { border-color: var(--primary); background: rgba(168,85,247,0.1); color: var(--primary); }
 
         /* Footer */
         footer {
@@ -925,14 +932,14 @@
             padding: 3rem 2rem;
             text-align: center;
         }
-        .footer-logo { font-size: 1.4rem; font-weight: 700; margin-bottom: 1rem; background: linear-gradient(135deg, #67e8f9, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .footer-logo { font-size: 1.4rem; font-weight: 700; margin-bottom: 1rem; background: linear-gradient(135deg, #f0abfc, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .footer-links { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1rem; flex-wrap: wrap; }
         .footer-links a { color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
         .footer-links a:hover { color: var(--primary); }
         .footer-copy { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem; }
         .footer-social { display: flex; justify-content: center; gap: 1.5rem; }
         .footer-social a { color: var(--text-muted); font-size: 1.5rem; transition: all 0.3s; }
-        .footer-social a:hover { color: #67e8f9; transform: translateY(-3px); }
+        .footer-social a:hover { color: #f0abfc; transform: translateY(-3px); }
 
         /* Page Modal */
         .page-modal {
@@ -960,7 +967,7 @@
             overflow-y: auto;
             padding: 3rem;
             position: relative;
-            box-shadow: 0 0 50px rgba(99,102,241,0.2);
+            box-shadow: 0 0 50px rgba(168,85,247,0.2);
             z-index: 9991;
         }
         .page-close {
@@ -976,25 +983,25 @@
             z-index: 10;
         }
         .page-close:hover { color: #ef4444; }
-        .page-content h1 { font-size: 2rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, #67e8f9, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .page-content h2 { font-size: 1.3rem; margin: 2rem 0 1rem; color: #67e8f9; }
+        .page-content h1 { font-size: 2rem; margin-bottom: 1.5rem; background: linear-gradient(135deg, #f0abfc, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .page-content h2 { font-size: 1.3rem; margin: 2rem 0 1rem; color: #f0abfc; }
         .page-content p { color: var(--text-muted); line-height: 1.8; margin-bottom: 1rem; }
         .page-content ul { color: var(--text-muted); padding-left: 1.5rem; margin-bottom: 1rem; }
         .page-content li { margin-bottom: 0.5rem; line-height: 1.6; }
-        .page-content a { color: #67e8f9; text-decoration: none; }
+        .page-content a { color: #f0abfc; text-decoration: none; }
         .page-content a:hover { text-decoration: underline; }
         .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 2rem; }
         .team-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 15px; padding: 2rem; text-align: center; transition: all 0.3s; }
-        .team-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 10px 30px rgba(99,102,241,0.2); }
-        .team-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 2rem; }
+        .team-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 10px 30px rgba(168,85,247,0.2); }
+        .team-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #a855f7, #a855f7); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 2rem; }
         .team-card h3 { margin-bottom: 0.5rem; }
         .team-card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; }
         .team-social a { color: var(--text-muted); margin: 0 0.5rem; font-size: 1.2rem; transition: color 0.3s; }
-        .team-social a:hover { color: #67e8f9; }
+        .team-social a:hover { color: #f0abfc; }
         .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-top: 2rem; }
         .contact-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 15px; padding: 2rem; text-align: center; transition: all 0.3s; }
         .contact-card:hover { border-color: var(--primary); }
-        .contact-card i { font-size: 2.5rem; color: #67e8f9; margin-bottom: 1rem; }
+        .contact-card i { font-size: 2.5rem; color: #f0abfc; margin-bottom: 1rem; }
         .contact-card h3 { margin-bottom: 0.5rem; }
         .contact-card p { color: var(--text-muted); font-size: 0.9rem; }
 
@@ -1034,8 +1041,8 @@
     <nav>
         <div class="nav-container">
             <a href="#" class="logo" onclick="location.reload()">
-                <div class="logo-icon"><i class="fas fa-infinity"></i></div>
-                <span>AllTool</span>
+                <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+                <span>Toolnova</span>
             </a>
 
             <ul class="nav-menu">
@@ -1136,9 +1143,9 @@
     </nav>
 
     <section class="hero">
-        <div class="hero-badge">PDF + Image Tools — one platform</div>
-        <h1>All Your File Tools<br>In One Place</h1>
-        <p>Every tool you need to work with PDFs and images. 100% FREE and easy to use! Merge, split, compress, convert with just a few clicks.</p>
+        <div class="hero-badge">✨ 20+ PDF & Image tools — 100% free forever</div>
+        <h1>Powerful File Tools,<br>Beautifully Simple</h1>
+        <p>Merge, split, compress, convert and edit your PDFs & images — right in your browser. Fast, private, and completely free. No sign-up needed to start.</p>
 
         <div class="filter-tabs">
             <button class="filter-tab active" onclick="filterTools('all', this)"><span class="tab-glow"></span>All</button>
@@ -1197,14 +1204,14 @@
     </section>
 
     <footer>
-        <div class="footer-logo"><i class="fas fa-infinity"></i> All in One Tool</div>
+        <div class="footer-logo"><i class="fas fa-infinity"></i> Toolnova</div>
         <div class="footer-links">
             <a href="#" onclick="openPage('privacy')">Privacy</a>
             <a href="#" onclick="openPage('terms')">Terms</a>
             <a href="#" onclick="openPage('team')">Team</a>
             <a href="#" onclick="openPage('contact')">Contact</a>
         </div>
-        <div class="footer-copy">&copy; 2024 All in One Tool. Made with <i class="fas fa-heart" style="color:#ef4444"></i> by <span style="color:#67e8f9;font-weight:600;">Aryan Chaturvedi</span></div>
+        <div class="footer-copy">&copy; 2024 Toolnova. Made with <i class="fas fa-heart" style="color:#ef4444"></i> by <span style="color:#f0abfc;font-weight:600;">Aryan Chaturvedi</span></div>
         <div class="footer-social">
             <a href="https://www.instagram.com/this.is.aaru?igsh=MWdlZHQyYmdpeWZleA==" target="_blank"><i class="fab fa-instagram"></i></a>
             <a href="mailto:chaturvediaryan2024@gmail.com"><i class="fas fa-envelope"></i></a>
@@ -2237,7 +2244,7 @@
                 <p>Last updated: January 2024</p>
 
                 <h2>Introduction</h2>
-                <p>Welcome to All in One Tool. We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we handle your information when you use our services.</p>
+                <p>Welcome to Toolnova. We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we handle your information when you use our services.</p>
 
                 <h2>Data Collection</h2>
                 <p>We want to be transparent about our data practices:</p>
@@ -2267,7 +2274,7 @@
                 <p>Last updated: January 2024</p>
 
                 <h2>Acceptance of Terms</h2>
-                <p>By accessing and using All in One Tool, you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
+                <p>By accessing and using Toolnova, you agree to be bound by these Terms of Service and all applicable laws and regulations.</p>
 
                 <h2>Use of Service</h2>
                 <p>You may use our services for lawful purposes only. You agree not to:</p>
@@ -2292,7 +2299,7 @@
             `,
             team: `
                 <h1><i class="fas fa-users"></i> Our Team</h1>
-                <p>Meet the creative minds behind All in One Tool</p>
+                <p>Meet the creative minds behind Toolnova</p>
 
                 <div class="team-grid">
                     <div class="team-card">
