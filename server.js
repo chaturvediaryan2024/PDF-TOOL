@@ -156,9 +156,14 @@ app.post('/api/repair', upload.single('files'), async (req, res) => {
 // ROTATE
 app.post('/api/rotate', upload.single('files'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file' });
-    const input = req.file.path, rot = req.body.rotation || '90', out = `rotated_${Date.now()}.pdf`, outPath = path.join(outputDir, out);
+    // Frontend sends `angle`; keep `rotation` as a fallback for older clients.
+    let angle = parseInt(req.body.angle || req.body.rotation || '90') || 0;
+    // PDF page rotation must be a multiple of 90 — round & normalize to 0..270.
+    angle = ((Math.round(angle / 90) * 90) % 360 + 360) % 360;
+    const input = req.file.path, out = `rotated_${Date.now()}.pdf`, outPath = path.join(outputDir, out);
     try {
-        await runQpdf([input, `--rotate=+${rot}`, '--', outPath]);
+        // :1-z applies the rotation to every page (1 through last).
+        await runQpdf([input, `--rotate=+${angle}:1-z`, '--', outPath]);
         fs.unlinkSync(input);
         send(res, out); cleanup(outPath);
     } catch (e) { try { fs.unlinkSync(input); } catch(x) {} res.status(500).json({ error: e.message }); }
