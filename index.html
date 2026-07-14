@@ -1297,7 +1297,6 @@
                             <div class="mega-column">
                                 <h5>PDF Security</h5>
                                 <a href="#" class="dropdown-item" onclick="openTool('unlock')"><span class="icon-sm icon-lock"><i class="fas fa-unlock"></i></span> Unlock PDF</a>
-                                <a href="#" class="dropdown-item" onclick="openTool('protect')"><span class="icon-sm icon-lock"><i class="fas fa-lock"></i></span> Protect PDF</a>
                                 <a href="#" class="dropdown-item" onclick="openTool('sign')"><span class="icon-sm icon-compress"><i class="fas fa-signature"></i></span> Sign PDF</a>
                                 <a href="#" class="dropdown-item" onclick="openTool('redact')"><span class="icon-sm icon-split"><i class="fas fa-eraser"></i></span> Redact PDF</a>
                             </div>
@@ -1382,7 +1381,6 @@
             <div class="tool-card" data-category="edit" onclick="openTool('edit-pdf')"><div class="icon bg-primary"><i class="fas fa-edit"></i></div><h4>Edit PDF</h4><p>Add text & images</p></div>
             <div class="tool-card" data-category="edit" onclick="openTool('add-header-footer')"><div class="icon bg-edit"><i class="fas fa-heading"></i></div><h4>Header & Footer</h4><p>Add headers</p></div>
             <!-- SECURITY -->
-            <div class="tool-card" data-category="security" onclick="openTool('protect')"><div class="icon bg-security"><i class="fas fa-lock"></i></div><h4>Protect PDF</h4><p>Add password</p></div>
             <div class="tool-card" data-category="security" onclick="openTool('unlock')"><div class="icon bg-security"><i class="fas fa-unlock"></i></div><h4>Unlock PDF</h4><p>Remove password</p></div>
             <div class="tool-card" data-category="security" onclick="openTool('sign')"><div class="icon bg-sign"><i class="fas fa-signature"></i></div><h4>Sign PDF</h4><p>Add signature</p></div>
             <div class="tool-card" data-category="security" onclick="openTool('redact')"><div class="icon bg-security"><i class="fas fa-eraser"></i></div><h4>Redact PDF</h4><p>Hide sensitive info</p></div>
@@ -1875,7 +1873,13 @@
             try {
                 if (cfg.server) await processServer(tool, fill, text);
                 else await processLocal(tool, fill, text);
-                fill.style.width = '100%'; text.textContent = 'Complete!'; prvBtn.style.display = 'inline-flex'; dlBtn.style.display = 'inline-flex';
+                fill.style.width = '100%'; text.textContent = 'Complete!';
+                // Show preview only for PDF output tools (not for text, word, excel, ppt, txt, protect, unlock)
+                const noPreviewTools = ['pdf-to-txt', 'pdf-to-word', 'pdf-to-excel', 'pdf-to-ppt', 'pdf-info', 'compare', 'protect', 'unlock', 'txt-to-pdf', 'word-to-pdf', 'excel-to-pdf', 'ppt-to-pdf'];
+                if (!noPreviewTools.includes(tool) && processedBlob && processedBlob.type === 'application/pdf') {
+                    prvBtn.style.display = 'inline-flex';
+                }
+                dlBtn.style.display = 'inline-flex';
                 lastProcessDone = true;
             } catch (e) { text.textContent = 'Error: ' + e.message; fill.style.background = '#ef4444'; }
         }
@@ -2096,21 +2100,7 @@
         }
 
         async function protectPdf(fill, text) {
-            const password = gv('protectPassword');
-            const confirm = gv('confirmPassword');
-            if (!password) throw new Error('Enter a password');
-            if (password !== confirm) throw new Error('Passwords do not match');
-            text.textContent = 'Note: Browser-based protection adds metadata only. For strong encryption, use desktop software.';
-            fill.style.width = '50%';
-            const { PDFDocument } = PDFLib;
-            const bytes = await uploadedFiles[0].arrayBuffer();
-            const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
-            doc.setTitle('Protected Document');
-            doc.setSubject('Password: ' + password.substring(0, 2) + '***');
-            doc.setKeywords(['protected']);
-            fill.style.width = '95%';
-            processedBlob = new Blob([await doc.save()], { type: 'application/pdf' });
-            outputFileName = 'protected.pdf';
+            throw new Error('Password protection requires server-side processing. Browser cannot encrypt PDFs. Use Adobe Acrobat or desktop software.');
         }
 
         async function unlockPdf(fill, text) {
