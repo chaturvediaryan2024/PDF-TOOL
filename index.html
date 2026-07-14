@@ -1452,7 +1452,7 @@
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         const SERVER = ''; // same-origin: works on localhost and on the live host alike
-        let currentTool = '', uploadedFiles = [], processedBlob = null, outputFileName = '', selectedPages = new Set(), signaturePad = null;
+        let currentTool = '', uploadedFiles = [], processedBlob = null, outputFileName = '', selectedPages = new Set(), signaturePad = null, lastProcessDone = false;
 
         const TOOLS = {
             'merge': { title: 'Merge PDF', accept: '.pdf', multiple: true, hint: 'Select PDFs to merge', btn: 'Merge', out: 'merged.pdf', server: true, icon: 'fa-layer-group' },
@@ -1478,7 +1478,7 @@
             'pdf-to-excel': { title: 'PDF to Excel', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Convert', out: 'spreadsheet.xlsx', server: false, icon: 'fa-file-excel' },
             'pdf-to-ppt': { title: 'PDF to PPT', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Convert', out: 'presentation.pptx', server: false, icon: 'fa-file-powerpoint' },
             'pdf-to-txt': { title: 'PDF to TXT', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Convert', out: 'text.txt', server: false, icon: 'fa-file-alt' },
-            'rotate': { title: 'Rotate PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Rotate', out: 'rotated.pdf', server: true, icon: 'fa-sync-alt', options: `<h4><i class="fas fa-sync-alt"></i> Rotation</h4><div class="option-group"><label>Angle</label><select id="rotateAngle"><option value="90">90° CW</option><option value="180">180°</option><option value="270">90° CCW</option></select></div><div class="option-group"><label>Or custom angle (° — multiples of 90)</label><input type="number" id="rotateCustom" placeholder="e.g. 270" step="90"></div>` },
+            'rotate': { title: 'Rotate PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Rotate', out: 'rotated.pdf', icon: 'fa-sync-alt', options: `<h4><i class="fas fa-sync-alt"></i> Rotation</h4><div class="option-group"><label>Angle</label><select id="rotateAngle"><option value="90">90° CW</option><option value="180">180°</option><option value="270">90° CCW</option></select></div><div class="option-group"><label>Or custom angle (any °)</label><input type="number" id="rotateCustom" placeholder="e.g. 45" step="1"></div>` },
             'add-watermark': { title: 'Add Watermark', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Add', out: 'watermarked.pdf', server: false, icon: 'fa-tint', options: `<h4><i class="fas fa-tint"></i> Watermark</h4><div class="option-group"><label>Text</label><input type="text" id="watermarkText" value="CONFIDENTIAL"></div><div class="option-row"><div class="option-group"><label>Size</label><input type="number" id="watermarkSize" value="50"></div><div class="option-group"><label>Opacity %</label><input type="number" id="watermarkOpacity" value="30"></div></div>` },
             'page-numbers': { title: 'Page Numbers', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Add', out: 'numbered.pdf', server: false, icon: 'fa-list-ol', options: `<h4><i class="fas fa-list-ol"></i> Settings</h4><div class="option-row"><div class="option-group"><label>Position</label><select id="pageNumPosition"><option value="bottom-center">Bottom Center</option><option value="bottom-right">Bottom Right</option><option value="top-center">Top Center</option></select></div><div class="option-group"><label>Start</label><input type="number" id="pageNumStart" value="1" min="1"></div></div>` },
             'crop': { title: 'Crop PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Crop', out: 'cropped.pdf', server: false, preview: true, icon: 'fa-crop-alt', options: `<h4><i class="fas fa-crop-alt"></i> Margins (pt)</h4><div class="option-row"><div class="option-group"><label>Top</label><input type="number" id="cropTop" value="50"></div><div class="option-group"><label>Bottom</label><input type="number" id="cropBottom" value="50"></div><div class="option-group"><label>Left</label><input type="number" id="cropLeft" value="50"></div><div class="option-group"><label>Right</label><input type="number" id="cropRight" value="50"></div></div>` },
@@ -1521,7 +1521,7 @@
             document.getElementById('progressContainer').classList.remove('active');
             document.getElementById('downloadBtn').style.display = 'none';
             document.getElementById('toolModal').classList.add('active');
-            uploadedFiles = []; processedBlob = null; selectedPages.clear();
+            uploadedFiles = []; processedBlob = null; selectedPages.clear(); lastProcessDone = false;
             if (tool === 'sign') setTimeout(initSignaturePad, 100);
         }
 
@@ -1536,11 +1536,23 @@
 
         function handleFiles(files) {
             const cfg = TOOLS[currentTool];
+            // After a completed job, adding a new file starts fresh — no leftover files/pages.
+            if (lastProcessDone) {
+                uploadedFiles = []; selectedPages.clear();
+                document.getElementById('previewArea').innerHTML = '';
+                lastProcessDone = false;
+            }
             if (!cfg.multiple) uploadedFiles = [];
             Array.from(files).forEach(f => uploadedFiles.push(f));
+            // Discard any previous result so a stale file can never be downloaded.
+            processedBlob = null;
+            document.getElementById('downloadBtn').style.display = 'none';
+            document.getElementById('progressContainer').classList.remove('active');
             renderFileList();
             document.getElementById('processBtn').disabled = uploadedFiles.length === 0;
             if (cfg.preview && uploadedFiles.length === 1) renderPreview();
+            // Reset the input so re-selecting the SAME file still fires onchange.
+            fileInput.value = '';
         }
 
         function renderFileList() {
@@ -1588,6 +1600,7 @@
                 if (cfg.server) await processServer(tool, fill, text);
                 else await processLocal(tool, fill, text);
                 fill.style.width = '100%'; text.textContent = 'Complete!'; dlBtn.style.display = 'inline-flex';
+                lastProcessDone = true;
             } catch (e) { text.textContent = 'Error: ' + e.message; fill.style.background = '#ef4444'; }
         }
 
@@ -1620,7 +1633,8 @@
         }
 
         async function processLocal(tool, fill, text) {
-            if (tool === 'txt-to-pdf') await txtToPdf(fill, text);
+            if (tool === 'rotate') await rotatePdf(fill, text);
+            else if (tool === 'txt-to-pdf') await txtToPdf(fill, text);
             else if (tool === 'word-to-pdf') await wordToPdf(fill, text);
             else if (tool === 'excel-to-pdf') await excelToPdf(fill, text);
             else if (tool === 'ppt-to-pdf') await pptToPdf(fill, text);
@@ -1640,6 +1654,47 @@
             else if (tool === 'edit-pdf') await editPdf(fill, text);
             else if (tool === 'add-header-footer') await addHeaderFooter(fill, text);
             else if (tool === 'sign') await signPdf(fill, text);
+        }
+
+        async function rotatePdf(fill, text) {
+            const { PDFDocument, degrees } = PDFLib;
+            let angle = parseInt(gv('rotateCustom') || gv('rotateAngle')) || 0;
+            angle = ((angle % 360) + 360) % 360; // normalize to 0..359
+            fill.style.width = '25%'; text.textContent = 'Loading PDF...';
+            const src = await PDFDocument.load(await uploadedFiles[0].arrayBuffer());
+
+            // Multiples of 90 → use native page rotation (crisp, tiny file).
+            if (angle % 90 === 0) {
+                src.getPages().forEach(p => {
+                    const cur = p.getRotation().angle || 0;
+                    p.setRotation(degrees((cur + angle) % 360));
+                });
+                fill.style.width = '90%';
+                processedBlob = new Blob([await src.save()], { type: 'application/pdf' });
+                outputFileName = 'rotated.pdf';
+                return;
+            }
+
+            // Arbitrary angle → embed each page rotated onto an enlarged canvas so nothing clips.
+            const out = await PDFDocument.create();
+            const pages = src.getPages();
+            const rad = angle * Math.PI / 180, c = Math.cos(rad), s = Math.sin(rad);
+            for (let i = 0; i < pages.length; i++) {
+                text.textContent = `Rotating page ${i + 1}/${pages.length}`;
+                fill.style.width = `${25 + (i / pages.length) * 65}%`;
+                const { width: w, height: h } = pages[i].getSize();
+                // Bounding box of the rotated page (CCW rotation matrix, matches pdf-lib drawPage).
+                const corners = [[0, 0], [w, 0], [w, h], [0, h]].map(([px, py]) => [px * c - py * s, px * s + py * c]);
+                const xs = corners.map(p => p[0]), ys = corners.map(p => p[1]);
+                const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+                const W = maxX - minX, H = maxY - minY;
+                const emb = await out.embedPage(pages[i]);
+                const page = out.addPage([W, H]);
+                page.drawPage(emb, { x: -minX, y: -minY, rotate: degrees(angle) });
+            }
+            fill.style.width = '95%';
+            processedBlob = new Blob([await out.save()], { type: 'application/pdf' });
+            outputFileName = 'rotated.pdf';
         }
 
         async function txtToPdf(fill, text) {
