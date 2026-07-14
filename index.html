@@ -1564,10 +1564,19 @@
             particlesEl.appendChild(dot);
         }
 
-        // Mouse following - INSTANT dot, slow orb
+        // Detect mobile/touch device
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+        // Mouse following - ONLY for desktop
         const mouseOrb = document.getElementById('mouseOrb');
         const centerDot = document.getElementById('centerDot');
         const tabGlow = document.getElementById('tabGlow');
+
+        // Hide cursor effects on mobile
+        if (isMobile) {
+            if (mouseOrb) mouseOrb.style.display = 'none';
+            if (centerDot) centerDot.style.display = 'none';
+        }
 
         let mouseX = window.innerWidth / 2;
         let mouseY = window.innerHeight / 2;
@@ -1579,83 +1588,86 @@
         // Trail positions - reduced for better performance
         const trailPositions = [];
         const maxTrail = 6;
-
-        document.addEventListener('mousemove', e => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-
-            // Dot follows INSTANTLY using transform (GPU accelerated)
-            centerDot.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
-
-            // Add to trail (throttled)
-            const now = Date.now();
-            if (now - lastStarTime > 50) {
-                trailPositions.unshift({ x: mouseX, y: mouseY });
-                if (trailPositions.length > maxTrail) trailPositions.pop();
-                lastStarTime = now;
-            }
-        });
-
-        // Smooth animation for orb only (slow follow)
-        function animateOrb() {
-            orbX += (mouseX - orbX) * 0.04;
-            orbY += (mouseY - orbY) * 0.04;
-            mouseOrb.style.transform = `translate(${orbX}px, ${orbY}px)`;
-            requestAnimationFrame(animateOrb);
-        }
-        animateOrb();
-
-        // Create trail dots
         const trailDots = [];
-        for (let i = 0; i < maxTrail; i++) {
-            const trail = document.createElement('div');
-            trail.className = 'dot-trail';
-            trail.style.opacity = (1 - i / maxTrail) * 0.6;
-            trail.style.width = (6 - i * 0.4) + 'px';
-            trail.style.height = (6 - i * 0.4) + 'px';
-            document.body.appendChild(trail);
-            trailDots.push(trail);
-        }
 
-        function animateTrail() {
-            trailPositions.forEach((pos, i) => {
-                if (trailDots[i]) {
-                    trailDots[i].style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+        // Only add mouse effects on desktop
+        if (!isMobile) {
+            document.addEventListener('mousemove', e => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+
+                // Dot follows INSTANTLY using transform (GPU accelerated)
+                centerDot.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
+
+                // Add to trail (throttled)
+                const now = Date.now();
+                if (now - lastStarTime > 50) {
+                    trailPositions.unshift({ x: mouseX, y: mouseY });
+                    if (trailPositions.length > maxTrail) trailPositions.pop();
+                    lastStarTime = now;
                 }
             });
-            requestAnimationFrame(animateTrail);
-        }
-        animateTrail();
 
-        // Click burst effect
-        document.addEventListener('click', e => {
-            const burst = document.createElement('div');
-            burst.className = 'click-burst';
-            burst.style.left = e.clientX + 'px';
-            burst.style.top = e.clientY + 'px';
-            document.body.appendChild(burst);
-            setTimeout(() => burst.remove(), 800);
+            // Smooth animation for orb only (slow follow)
+            function animateOrb() {
+                orbX += (mouseX - orbX) * 0.04;
+                orbY += (mouseY - orbY) * 0.04;
+                mouseOrb.style.transform = `translate(${orbX}px, ${orbY}px)`;
+                requestAnimationFrame(animateOrb);
+            }
+            animateOrb();
 
-            if (e.target.closest('.filter-tab') || e.target.closest('.tool-card')) {
-                tabGlow.style.left = e.clientX + 'px';
-                tabGlow.style.top = e.clientY + 'px';
-                tabGlow.classList.remove('active');
-                void tabGlow.offsetWidth;
-                tabGlow.classList.add('active');
+            // Create trail dots - only on desktop
+            for (let i = 0; i < maxTrail; i++) {
+                const trail = document.createElement('div');
+                trail.className = 'dot-trail';
+                trail.style.opacity = (1 - i / maxTrail) * 0.6;
+                trail.style.width = (6 - i * 0.4) + 'px';
+                trail.style.height = (6 - i * 0.4) + 'px';
+                document.body.appendChild(trail);
+                trailDots.push(trail);
             }
-        });
 
-        // Hover effect on interactive elements
-        document.addEventListener('mouseover', e => {
-            if (e.target.closest('.filter-tab, .tool-card, .nav-link, button, a')) {
-                centerDot.classList.add('hover');
+            function animateTrail() {
+                trailPositions.forEach((pos, i) => {
+                    if (trailDots[i]) {
+                        trailDots[i].style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+                    }
+                });
+                requestAnimationFrame(animateTrail);
             }
-        });
-        document.addEventListener('mouseout', e => {
-            if (e.target.closest('.filter-tab, .tool-card, .nav-link, button, a')) {
-                centerDot.classList.remove('hover');
-            }
-        });
+            animateTrail();
+
+            // Click burst effect - desktop only
+            document.addEventListener('click', e => {
+                const burst = document.createElement('div');
+                burst.className = 'click-burst';
+                burst.style.left = e.clientX + 'px';
+                burst.style.top = e.clientY + 'px';
+                document.body.appendChild(burst);
+                setTimeout(() => burst.remove(), 800);
+
+                if (e.target.closest('.filter-tab') || e.target.closest('.tool-card')) {
+                    tabGlow.style.left = e.clientX + 'px';
+                    tabGlow.style.top = e.clientY + 'px';
+                    tabGlow.classList.remove('active');
+                    void tabGlow.offsetWidth;
+                    tabGlow.classList.add('active');
+                }
+            });
+
+            // Hover effect on interactive elements - desktop only
+            document.addEventListener('mouseover', e => {
+                if (e.target.closest('.filter-tab, .tool-card, .nav-link, button, a')) {
+                    centerDot.classList.add('hover');
+                }
+            });
+            document.addEventListener('mouseout', e => {
+                if (e.target.closest('.filter-tab, .tool-card, .nav-link, button, a')) {
+                    centerDot.classList.remove('hover');
+                }
+            });
+        } // End of !isMobile block
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         const SERVER = ''; // same-origin: works on localhost and on the live host alike
