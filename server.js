@@ -104,10 +104,24 @@ app.post('/api/split', upload.single('files'), async (req, res) => {
 ['remove-pages', 'extract-pages', 'organize'].forEach(ep => {
     app.post(`/api/${ep}`, upload.single('files'), async (req, res) => {
         if (!req.file) return res.status(400).json({ error: 'No file' });
-        const input = req.file.path, pages = (req.body.pages || '').split(',').filter(p => p).map(p => parseInt(p) + 1);
-        if (!pages.length) { fs.unlinkSync(input); return res.status(400).json({ error: 'Select pages' }); }
+        const input = req.file.path;
+        // Frontend sends 1-based page numbers, comma-separated.
+        const selected = (req.body.pages || '').split(',').filter(p => p).map(p => parseInt(p));
+        if (!selected.length) { fs.unlinkSync(input); return res.status(400).json({ error: 'Select pages' }); }
         const out = `${ep.replace('-','_')}_${Date.now()}.pdf`, outPath = path.join(outputDir, out);
         try {
+            let pages;
+            if (ep === 'remove-pages') {
+                // Keep every page EXCEPT the selected ones.
+                const total = parseInt((await runQpdf(['--show-npages', input])).trim());
+                const removeSet = new Set(selected);
+                pages = [];
+                for (let i = 1; i <= total; i++) if (!removeSet.has(i)) pages.push(i);
+                if (!pages.length) { fs.unlinkSync(input); return res.status(400).json({ error: 'Cannot remove all pages' }); }
+            } else {
+                // extract / organize: keep exactly the selected pages, in the given order.
+                pages = selected;
+            }
             await runQpdf([input, '--pages', input, pages.join(','), '--', outPath]);
             fs.unlinkSync(input);
             send(res, out); cleanup(outPath);
