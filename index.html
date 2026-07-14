@@ -88,26 +88,34 @@
         /* Mouse Following Orb - Slow glow */
         .mouse-orb {
             position: fixed;
+            top: 0;
+            left: 0;
             width: 500px;
             height: 500px;
+            margin-left: -250px;
+            margin-top: -250px;
             background: radial-gradient(circle, rgba(236,72,153,0.2) 0%, rgba(168,85,247,0.1) 30%, transparent 60%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 1;
-            transform: translate(-50%, -50%);
+            will-change: transform;
             filter: blur(30px);
         }
 
         /* Center Glowing Dot - NO DELAY */
         .center-dot {
             position: fixed;
+            top: 0;
+            left: 0;
             width: 16px;
             height: 16px;
+            margin-left: -8px;
+            margin-top: -8px;
             background: radial-gradient(circle, #f0abfc 0%, #ec4899 40%, #a855f7 80%, transparent 100%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 1000001;
-            transform: translate(-50%, -50%);
+            will-change: transform;
             box-shadow: 0 0 20px rgba(236,72,153,1), 0 0 40px rgba(236,72,153,0.8), 0 0 60px rgba(168,85,247,0.6), 0 0 80px rgba(168,85,247,0.4);
         }
         .center-dot::before {
@@ -137,13 +145,17 @@
         /* Dot Trail */
         .dot-trail {
             position: fixed;
+            top: 0;
+            left: 0;
             width: 8px;
             height: 8px;
+            margin-left: -4px;
+            margin-top: -4px;
             background: radial-gradient(circle, rgba(240,171,252,0.9) 0%, rgba(236,72,153,0.6) 50%, transparent 80%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 999999;
-            transform: translate(-50%, -50%);
+            will-change: transform;
             box-shadow: 0 0 10px rgba(236,72,153,0.8), 0 0 20px rgba(168,85,247,0.5);
         }
 
@@ -1564,46 +1576,31 @@
         let lastStarTime = 0;
         let lastSparkleTime = 0;
 
-        // Trail positions
+        // Trail positions - reduced for better performance
         const trailPositions = [];
-        const maxTrail = 12;
+        const maxTrail = 6;
 
         document.addEventListener('mousemove', e => {
             mouseX = e.clientX;
             mouseY = e.clientY;
 
-            // Dot follows INSTANTLY
-            centerDot.style.left = mouseX + 'px';
-            centerDot.style.top = mouseY + 'px';
+            // Dot follows INSTANTLY using transform (GPU accelerated)
+            centerDot.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
 
-            // Add to trail
-            trailPositions.unshift({ x: mouseX, y: mouseY, time: Date.now() });
-            if (trailPositions.length > maxTrail) trailPositions.pop();
-
-            // Create glowing dots on mouse move - no lines
+            // Add to trail (throttled)
             const now = Date.now();
-            if (now - lastStarTime > 30) {
-                createMouseStar(mouseX, mouseY);
+            if (now - lastStarTime > 50) {
+                trailPositions.unshift({ x: mouseX, y: mouseY });
+                if (trailPositions.length > maxTrail) trailPositions.pop();
                 lastStarTime = now;
             }
         });
-
-        // Create glowing dot - quick remove
-        function createMouseStar(x, y) {
-            const star = document.createElement('div');
-            star.className = 'mouse-star';
-            star.style.left = x + 'px';
-            star.style.top = y + 'px';
-            document.body.appendChild(star);
-            setTimeout(() => star.remove(), 400);
-        }
 
         // Smooth animation for orb only (slow follow)
         function animateOrb() {
             orbX += (mouseX - orbX) * 0.04;
             orbY += (mouseY - orbY) * 0.04;
-            mouseOrb.style.left = orbX + 'px';
-            mouseOrb.style.top = orbY + 'px';
+            mouseOrb.style.transform = `translate(${orbX}px, ${orbY}px)`;
             requestAnimationFrame(animateOrb);
         }
         animateOrb();
@@ -1623,8 +1620,7 @@
         function animateTrail() {
             trailPositions.forEach((pos, i) => {
                 if (trailDots[i]) {
-                    trailDots[i].style.left = pos.x + 'px';
-                    trailDots[i].style.top = pos.y + 'px';
+                    trailDots[i].style.transform = `translate(${pos.x}px, ${pos.y}px)`;
                 }
             });
             requestAnimationFrame(animateTrail);
