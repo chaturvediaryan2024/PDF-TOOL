@@ -572,6 +572,37 @@
             line-height: 1.8;
             animation: fadeUp 0.7s ease 0.2s both;
         }
+        .tool-search {
+            max-width: 520px;
+            margin: 0 auto 2.5rem;
+            position: relative;
+            display: flex;
+            align-items: center;
+            animation: fadeUp 0.7s ease 0.28s both;
+        }
+        .tool-search i {
+            position: absolute;
+            left: 20px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            pointer-events: none;
+        }
+        .tool-search input {
+            width: 100%;
+            padding: 0.95rem 1.3rem 0.95rem 3.1rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            color: var(--text);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .tool-search input::placeholder { color: var(--text-muted); }
+        .tool-search input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 24px rgba(236,72,153,0.28);
+        }
 
         /* Filter Tabs */
         .filter-tabs {
@@ -1147,6 +1178,11 @@
         <h1>Powerful File Tools,<br>Beautifully Simple</h1>
         <p>Merge, split, compress, convert and edit your PDFs & images — right in your browser. Fast, private, and completely free. No sign-up needed to start.</p>
 
+        <div class="tool-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="toolSearch" placeholder="Search tools… e.g. merge, compress, passport" oninput="searchTools(this.value)" autocomplete="off">
+        </div>
+
         <div class="filter-tabs">
             <button class="filter-tab active" onclick="filterTools('all', this)"><span class="tab-glow"></span>All</button>
             <button class="filter-tab" onclick="filterTools('organize', this)"><span class="tab-glow"></span>Organize PDF</button>
@@ -1171,6 +1207,7 @@
             <div class="tool-card" data-category="optimize" onclick="openTool('compress-to-size')"><div class="icon bg-primary"><i class="fas fa-bullseye"></i></div><h4>PDF to Size</h4><p>Compress to exact KB/MB</p></div>
             <div class="tool-card" data-category="optimize" onclick="openTool('compress-image')"><div class="icon bg-image"><i class="fas fa-photo-video"></i></div><h4>Compress Image</h4><p>Reduce image to KB</p></div>
             <div class="tool-card" data-category="optimize" onclick="openTool('resize-image')"><div class="icon bg-image"><i class="fas fa-expand-arrows-alt"></i></div><h4>Resize Image</h4><p>Change dimensions</p></div>
+            <div class="tool-card" data-category="optimize" onclick="openTool('passport-photo')"><div class="icon bg-primary"><i class="fas fa-id-card"></i></div><h4>Passport Photo</h4><p>Passport size photo maker</p></div>
             <div class="tool-card" data-category="optimize" onclick="openTool('repair')"><div class="icon bg-repair"><i class="fas fa-wrench"></i></div><h4>Repair PDF</h4><p>Fix damaged files</p></div>
             <div class="tool-card" data-category="optimize" onclick="openTool('ocr')"><div class="icon bg-ocr"><i class="fas fa-eye"></i></div><h4>OCR PDF</h4><p>Make text searchable</p></div>
             <!-- CONVERT -->
@@ -1471,6 +1508,7 @@
             'compress-to-size': { title: 'Compress to Size', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Compress', out: 'compressed.pdf', server: false, icon: 'fa-bullseye', options: `<h4><i class="fas fa-bullseye"></i> Target Size</h4><div class="option-group"><label>Quick Select</label><div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem"><button type="button" class="size-btn" onclick="setTargetSize(50)">50 KB</button><button type="button" class="size-btn" onclick="setTargetSize(100)">100 KB</button><button type="button" class="size-btn" onclick="setTargetSize(200)">200 KB</button><button type="button" class="size-btn" onclick="setTargetSize(500)">500 KB</button><button type="button" class="size-btn" onclick="setTargetSize(1024)">1 MB</button></div></div><div class="option-row" style="margin-top:1rem"><div class="option-group"><label>Custom Size</label><input type="number" id="targetSize" value="100" min="10"></div><div class="option-group"><label>Unit</label><select id="sizeUnit"><option value="kb">KB</option><option value="mb">MB</option></select></div></div>` },
             'compress-image': { title: 'Compress Image', accept: 'image/*', multiple: true, hint: 'Select images', btn: 'Compress', out: 'compressed.zip', server: false, icon: 'fa-photo-video', options: `<h4><i class="fas fa-photo-video"></i> Target Size</h4><div class="option-group"><label>Quick Select</label><div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem"><button type="button" class="size-btn" onclick="setTargetSize(20)">20 KB</button><button type="button" class="size-btn" onclick="setTargetSize(50)">50 KB</button><button type="button" class="size-btn" onclick="setTargetSize(100)">100 KB</button><button type="button" class="size-btn" onclick="setTargetSize(200)">200 KB</button></div></div><div class="option-row" style="margin-top:1rem"><div class="option-group"><label>Custom Size</label><input type="number" id="targetSize" value="50" min="5"></div><div class="option-group"><label>Unit</label><select id="sizeUnit"><option value="kb">KB</option><option value="mb">MB</option></select></div></div><div class="option-group"><label>Format</label><select id="imgFormat"><option value="jpeg">JPG</option><option value="webp">WebP</option></select></div>` },
             'resize-image': { title: 'Resize Image', accept: 'image/*', multiple: true, hint: 'Select images', btn: 'Resize', out: 'resized.zip', server: false, icon: 'fa-expand-arrows-alt', options: `<h4><i class="fas fa-expand-arrows-alt"></i> Dimensions</h4><div class="option-row"><div class="option-group"><label>Width</label><input type="number" id="resizeWidth" value="800" min="10"></div><div class="option-group"><label>Height</label><input type="number" id="resizeHeight" value="600" min="10"></div></div><div class="option-group"><label><input type="checkbox" id="maintainRatio" checked> Keep aspect ratio</label></div>` },
+            'passport-photo': { title: 'Passport Photo', accept: 'image/*', multiple: false, hint: 'Select your photo', btn: 'Create', out: 'passport.jpg', server: false, icon: 'fa-id-card', options: `<h4><i class="fas fa-id-card"></i> Passport Photo</h4><div class="option-group"><label>Photo Size</label><select id="passportSize"><option value="35x45">35 × 45 mm (India / most countries)</option><option value="51x51">51 × 51 mm (US 2×2 inch)</option><option value="25x35">25 × 35 mm (small ID)</option><option value="33x48">33 × 48 mm (Schengen / EU)</option></select></div><div class="option-group"><label>Output</label><select id="passportOutput"><option value="single">Single photo</option><option value="sheet">Printable 4×6 sheet (multiple copies)</option></select></div><div class="option-group"><label>Background</label><select id="passportBg"><option value="keep">Keep original</option><option value="white">White</option></select></div>` },
             'repair': { title: 'Repair PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Repair', out: 'repaired.pdf', server: true, icon: 'fa-wrench' },
             'ocr': { title: 'OCR PDF', accept: '.pdf,image/*', multiple: false, hint: 'Select PDF or Image', btn: 'Extract Text', out: 'extracted.txt', server: false, icon: 'fa-eye' },
             'jpg-to-pdf': { title: 'JPG to PDF', accept: 'image/*', multiple: true, hint: 'Select images', btn: 'Convert', out: 'images.pdf', server: false, icon: 'fa-file-image' },
@@ -1502,10 +1540,23 @@
         };
 
         function filterTools(category, btn) {
+            const search = document.getElementById('toolSearch');
+            if (search) search.value = ''; // clicking a category clears the search
             document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
             document.querySelectorAll('.tool-card').forEach(c => {
                 c.classList.toggle('hidden', category !== 'all' && c.dataset.category !== category);
+            });
+        }
+
+        function searchTools(q) {
+            q = q.trim().toLowerCase();
+            // A search looks across ALL tools, so reset the category tabs to "All".
+            if (q) {
+                document.querySelectorAll('.filter-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+            }
+            document.querySelectorAll('.tool-card').forEach(c => {
+                c.classList.toggle('hidden', q ? !c.textContent.toLowerCase().includes(q) : false);
             });
         }
 
@@ -1656,6 +1707,7 @@
             else if (tool === 'compress-image') await compressImageToSize(fill, text);
             else if (tool === 'compress' || tool === 'compress-to-size') await compressPdfToSize(fill, text);
             else if (tool === 'resize-image') await resizeImages(fill, text);
+            else if (tool === 'passport-photo') await passportPhoto(fill, text);
             else if (tool === 'add-watermark') await addWatermark(fill, text);
             else if (tool === 'page-numbers') await addPageNumbers(fill, text);
             else if (tool === 'crop') await cropPdf(fill, text);
@@ -1897,6 +1949,57 @@
             fill.style.width = '95%';
             processedBlob = new Blob([result], { type: 'application/pdf' });
             outputFileName = `compressed_${Math.round(result.byteLength / 1024)}kb.pdf`;
+        }
+
+        // Draw an image into (dx,dy,dw,dh) filling the box, cropping overflow (center).
+        function drawCover(ctx, img, dx, dy, dw, dh) {
+            const ir = img.width / img.height, tr = dw / dh;
+            let sw, sh, sx, sy;
+            if (ir > tr) { sh = img.height; sw = sh * tr; sx = (img.width - sw) / 2; sy = 0; }
+            else { sw = img.width; sh = sw / tr; sx = 0; sy = (img.height - sh) / 2; }
+            ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+        }
+
+        async function passportPhoto(fill, text) {
+            text.textContent = 'Loading photo...'; fill.style.width = '20%';
+            const img = await createImageBitmap(uploadedFiles[0]);
+            const [wmm, hmm] = (gv('passportSize') || '35x45').split('x').map(Number);
+            const DPI = 300, mm2px = mm => Math.round(mm / 25.4 * DPI);
+            const pw = mm2px(wmm), ph = mm2px(hmm);
+            const useWhite = gv('passportBg') === 'white';
+            const output = gv('passportOutput') || 'single';
+
+            // Build the single passport-sized photo.
+            const photo = document.createElement('canvas'); photo.width = pw; photo.height = ph;
+            const pctx = photo.getContext('2d');
+            pctx.fillStyle = useWhite ? '#ffffff' : '#ffffff'; pctx.fillRect(0, 0, pw, ph);
+            drawCover(pctx, img, 0, 0, pw, ph);
+            pctx.strokeStyle = '#dddddd'; pctx.lineWidth = 2; pctx.strokeRect(1, 1, pw - 2, ph - 2);
+            fill.style.width = '60%';
+
+            if (output === 'single') {
+                processedBlob = await new Promise(r => photo.toBlob(r, 'image/jpeg', 0.95));
+                outputFileName = `passport_${wmm}x${hmm}mm.jpg`;
+                fill.style.width = '95%';
+                return;
+            }
+
+            // Printable 4×6 inch sheet (portrait) with as many copies as fit.
+            text.textContent = 'Building print sheet...';
+            const sheetW = mm2px(102), sheetH = mm2px(152), gap = mm2px(4);
+            const sheet = document.createElement('canvas'); sheet.width = sheetW; sheet.height = sheetH;
+            const sctx = sheet.getContext('2d');
+            sctx.fillStyle = '#ffffff'; sctx.fillRect(0, 0, sheetW, sheetH);
+            const cols = Math.max(1, Math.floor((sheetW + gap) / (pw + gap)));
+            const rows = Math.max(1, Math.floor((sheetH + gap) / (ph + gap)));
+            const totalW = cols * pw + (cols - 1) * gap, totalH = rows * ph + (rows - 1) * gap;
+            const offX = (sheetW - totalW) / 2, offY = (sheetH - totalH) / 2;
+            for (let r = 0; r < rows; r++)
+                for (let c = 0; c < cols; c++)
+                    sctx.drawImage(photo, offX + c * (pw + gap), offY + r * (ph + gap), pw, ph);
+            fill.style.width = '90%';
+            processedBlob = await new Promise(r => sheet.toBlob(r, 'image/jpeg', 0.95));
+            outputFileName = `passport_sheet_${cols * rows}up.jpg`;
         }
 
         async function resizeImages(fill, text) {
