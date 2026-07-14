@@ -2577,33 +2577,60 @@
             processedBlob = new Blob([await doc.save()], { type: 'application/pdf' }); outputFileName = 'signed.pdf';
         }
 
-        // OCR - Extract text from PDF/Image using Tesseract.js
+        // OCR - Extract text from PDF/Image using Tesseract.js (all pages)
         async function ocrPdf(fill, text) {
             if (typeof Tesseract === 'undefined') throw new Error('Tesseract OCR library not loaded. Please refresh the page.');
-            text.textContent = 'Loading OCR engine...'; fill.style.width = '10%';
+            text.textContent = 'Initializing OCR engine...'; fill.style.width = '5%';
             const file = uploadedFiles[0];
-            let imageData;
+            let allText = '';
 
             if (file.type === 'application/pdf') {
-                text.textContent = 'Rendering PDF...'; fill.style.width = '20%';
+                // Process all PDF pages
                 const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
-                const page = await pdf.getPage(1);
-                const viewport = page.getViewport({ scale: 2 });
-                const canvas = document.createElement('canvas');
-                canvas.width = viewport.width; canvas.height = viewport.height;
-                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-                imageData = canvas;
+                const totalPages = pdf.numPages;
+
+                for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                    text.textContent = `Rendering page ${pageNum}/${totalPages}...`;
+                    fill.style.width = (5 + (pageNum / totalPages) * 30) + '%';
+
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: 2 });
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    await page.render({ canvasContext: ctx, viewport }).promise;
+
+                    text.textContent = `OCR page ${pageNum}/${totalPages}...`;
+                    const baseProgress = 35 + ((pageNum - 1) / totalPages) * 55;
+
+                    const result = await Tesseract.recognize(canvas, 'eng', {
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                fill.style.width = (baseProgress + (m.progress * 55 / totalPages)) + '%';
+                            }
+                        }
+                    });
+
+                    allText += `--- Page ${pageNum} ---\n${result.data.text}\n\n`;
+                }
             } else {
-                imageData = file;
+                // Single image OCR
+                text.textContent = 'Processing image...'; fill.style.width = '20%';
+                const result = await Tesseract.recognize(file, 'eng', {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            fill.style.width = (20 + m.progress * 70) + '%';
+                        }
+                    }
+                });
+                allText = result.data.text;
             }
 
-            text.textContent = 'Recognizing text...'; fill.style.width = '40%';
-            const result = await Tesseract.recognize(imageData, 'eng', {
-                logger: m => { if (m.status === 'recognizing text') { fill.style.width = (40 + m.progress * 50) + '%'; } }
-            });
-
             fill.style.width = '95%'; text.textContent = 'Creating output...';
-            processedBlob = new Blob([result.data.text], { type: 'text/plain' });
+            processedBlob = new Blob([allText.trim()], { type: 'text/plain' });
             outputFileName = 'extracted_text.txt';
         }
 
@@ -2678,39 +2705,117 @@
             outputFileName = 'spreadsheet.pdf';
         }
 
-        // PPT to PDF (basic - extracts text and images)
+        // PPT to PDF - Renders slides with text, images and backgrounds
         async function pptToPdf(fill, text) {
-            text.textContent = 'Reading PowerPoint...'; fill.style.width = '20%';
+            text.textContent = 'Reading PowerPoint...'; fill.style.width = '10%';
             const zip = await JSZip.loadAsync(await uploadedFiles[0].arrayBuffer());
             const { PDFDocument, StandardFonts, rgb } = PDFLib;
             const doc = await PDFDocument.create();
-            const font = await doc.embedFont(StandardFonts.HelveticaBold);
+            const font = await doc.embedFont(StandardFonts.Helvetica);
+            const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
 
-            // Extract slides
-            const slideFiles = Object.keys(zip.files).filter(f => f.match(/ppt\/slides\/slide\d+\.xml/)).sort();
-            let slideNum = 0;
-
-            for (const slideFile of slideFiles) {
-                slideNum++;
-                text.textContent = `Processing slide ${slideNum}...`; fill.style.width = (20 + (slideNum/slideFiles.length)*60) + '%';
-                const content = await zip.file(slideFile).async('text');
-                const textMatches = content.match(/<a:t>([^<]+)<\/a:t>/g) || [];
-                const texts = textMatches.map(m => m.replace(/<\/?a:t>/g, ''));
-
-                const page = doc.addPage([960, 540]); // 16:9
-                page.drawRectangle({ x: 0, y: 0, width: 960, height: 540, color: rgb(1,1,1) });
-
-                let y = 480;
-                texts.forEach((t, i) => {
-                    if (y > 40) {
-                        const fontSize = i === 0 ? 28 : 16;
-                        page.drawText(t.substring(0, 60), { x: 50, y, size: fontSize, font, color: rgb(0.1,0.1,0.1) });
-                        y -= fontSize * 1.5;
-                    }
+            // Get all slide files sorted
+            const slideFiles = Object.keys(zip.files)
+                .filter(f => f.match(/ppt\/slides\/slide\d+\.xml/))
+                .sort((a, b) => {
+                    const numA = parseInt(a.match(/slide(\d+)/)[1]);
+                    const numB = parseInt(b.match(/slide(\d+)/)[1]);
+                    return numA - numB;
                 });
+
+            // Extract images from ppt/media folder
+            const mediaFiles = {};
+            for (const fileName of Object.keys(zip.files)) {
+                if (fileName.startsWith('ppt/media/')) {
+                    try {
+                        const data = await zip.file(fileName).async('arraybuffer');
+                        mediaFiles[fileName.split('/').pop()] = new Uint8Array(data);
+                    } catch (e) {}
+                }
             }
 
-            fill.style.width = '90%';
+            for (let slideNum = 0; slideNum < slideFiles.length; slideNum++) {
+                const slideFile = slideFiles[slideNum];
+                text.textContent = `Processing slide ${slideNum + 1}/${slideFiles.length}...`;
+                fill.style.width = (10 + ((slideNum + 1) / slideFiles.length) * 80) + '%';
+
+                const content = await zip.file(slideFile).async('text');
+                const page = doc.addPage([960, 540]); // 16:9 landscape
+
+                // White background
+                page.drawRectangle({ x: 0, y: 0, width: 960, height: 540, color: rgb(1, 1, 1) });
+
+                // Extract all text content
+                const textMatches = content.match(/<a:t>([^<]*)<\/a:t>/g) || [];
+                const texts = textMatches.map(m => m.replace(/<\/?a:t>/g, '').trim()).filter(t => t);
+
+                // Draw text with better layout
+                let y = 480;
+                let isTitle = true;
+                for (const t of texts) {
+                    if (y < 60) break;
+                    const fontSize = isTitle ? 32 : 18;
+                    const useFont = isTitle ? fontBold : font;
+                    const maxWidth = 860;
+                    const maxChars = Math.floor(maxWidth / (fontSize * 0.5));
+
+                    // Word wrap
+                    const words = t.split(' ');
+                    let line = '';
+                    for (const word of words) {
+                        if ((line + ' ' + word).length > maxChars) {
+                            if (line) {
+                                page.drawText(line, { x: 50, y, size: fontSize, font: useFont, color: rgb(0.1, 0.1, 0.1) });
+                                y -= fontSize * 1.4;
+                            }
+                            line = word;
+                        } else {
+                            line = line ? line + ' ' + word : word;
+                        }
+                    }
+                    if (line && y >= 60) {
+                        page.drawText(line, { x: 50, y, size: fontSize, font: useFont, color: rgb(0.1, 0.1, 0.1) });
+                        y -= fontSize * 1.4;
+                    }
+                    if (isTitle) { y -= 20; isTitle = false; }
+                }
+
+                // Try to embed images referenced in slide
+                const imgRefs = content.match(/r:embed="rId\d+"/g) || [];
+                const relFile = slideFile.replace('slides/', 'slides/_rels/').replace('.xml', '.xml.rels');
+                if (zip.file(relFile)) {
+                    const rels = await zip.file(relFile).async('text');
+                    let imgX = 50, imgY = 100;
+                    for (const ref of imgRefs) {
+                        const rId = ref.match(/rId(\d+)/)[1];
+                        const targetMatch = rels.match(new RegExp(`Id="rId${rId}"[^>]*Target="([^"]+)"`));
+                        if (targetMatch) {
+                            const imgName = targetMatch[1].split('/').pop();
+                            if (mediaFiles[imgName]) {
+                                try {
+                                    let img;
+                                    if (imgName.match(/\.(jpg|jpeg)$/i)) {
+                                        img = await doc.embedJpg(mediaFiles[imgName]);
+                                    } else if (imgName.match(/\.png$/i)) {
+                                        img = await doc.embedPng(mediaFiles[imgName]);
+                                    }
+                                    if (img) {
+                                        const scale = Math.min(200 / img.width, 150 / img.height, 1);
+                                        page.drawImage(img, { x: imgX, y: imgY, width: img.width * scale, height: img.height * scale });
+                                        imgX += 220;
+                                        if (imgX > 700) { imgX = 50; imgY -= 170; }
+                                    }
+                                } catch (e) {}
+                            }
+                        }
+                    }
+                }
+
+                // Slide number
+                page.drawText(`${slideNum + 1}`, { x: 920, y: 20, size: 12, font, color: rgb(0.5, 0.5, 0.5) });
+            }
+
+            fill.style.width = '95%';
             processedBlob = new Blob([await doc.save()], { type: 'application/pdf' });
             outputFileName = 'presentation.pdf';
         }
@@ -2779,30 +2884,49 @@
             outputFileName = 'spreadsheet.xlsx';
         }
 
-        // PDF to PPT
+        // PDF to PPT - High quality slide rendering
         async function pdfToPpt(fill, text) {
             if (typeof PptxGenJS === 'undefined') throw new Error('PptxGenJS library not loaded. Please refresh the page.');
-            text.textContent = 'Converting PDF pages to slides...'; fill.style.width = '20%';
+            text.textContent = 'Preparing conversion...'; fill.style.width = '10%';
             const pdf = await pdfjsLib.getDocument(await uploadedFiles[0].arrayBuffer()).promise;
             const pptx = new PptxGenJS();
 
+            // Set presentation properties
+            pptx.layout = 'LAYOUT_16x9';
+            pptx.author = 'Toolnova';
+            pptx.title = uploadedFiles[0].name.replace('.pdf', '');
+
             for (let i = 1; i <= pdf.numPages; i++) {
-                text.textContent = `Processing page ${i}/${pdf.numPages}...`;
-                fill.style.width = (20 + (i/pdf.numPages)*70) + '%';
+                text.textContent = `Rendering page ${i}/${pdf.numPages}...`;
+                fill.style.width = (10 + (i / pdf.numPages) * 80) + '%';
 
                 const page = await pdf.getPage(i);
-                const viewport = page.getViewport({ scale: 2 });
+                // Higher scale for better quality (2.5x)
+                const viewport = page.getViewport({ scale: 2.5 });
                 const canvas = document.createElement('canvas');
-                canvas.width = viewport.width; canvas.height = viewport.height;
-                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                await page.render({ canvasContext: ctx, viewport }).promise;
 
+                // Create slide with high quality image
                 const slide = pptx.addSlide();
-                slide.addImage({ data: canvas.toDataURL('image/jpeg', 0.9), x: 0, y: 0, w: '100%', h: '100%' });
+                const imgData = canvas.toDataURL('image/png'); // PNG for better quality
+                slide.addImage({
+                    data: imgData,
+                    x: 0,
+                    y: 0,
+                    w: '100%',
+                    h: '100%',
+                    sizing: { type: 'contain', w: '100%', h: '100%' }
+                });
             }
 
-            text.textContent = 'Creating PowerPoint...'; fill.style.width = '95%';
+            text.textContent = 'Creating PowerPoint file...'; fill.style.width = '95%';
             processedBlob = await pptx.write({ outputType: 'blob' });
-            outputFileName = 'presentation.pptx';
+            outputFileName = uploadedFiles[0].name.replace('.pdf', '') + '.pptx';
         }
 
         // Preview functionality
