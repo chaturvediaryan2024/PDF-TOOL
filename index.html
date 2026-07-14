@@ -883,6 +883,117 @@
         }
         .download-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(16,185,129,0.4); }
 
+        /* Preview Button */
+        .preview-btn {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            border: none;
+            padding: 0.9rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 25px rgba(139,92,246,0.3);
+        }
+        .preview-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(139,92,246,0.4); }
+
+        /* Preview Modal */
+        .preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 10000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .preview-modal.active { display: flex; }
+        .preview-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0,0,0,0.3);
+        }
+        .preview-header h3 { margin: 0; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .preview-close {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: var(--text);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        .preview-close:hover { background: rgba(255,0,0,0.3); }
+        .preview-body {
+            flex: 1;
+            overflow: auto;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 300px;
+            max-height: 70vh;
+        }
+        .preview-body img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .preview-body iframe, .preview-body embed {
+            width: 100%;
+            height: 60vh;
+            border: none;
+            border-radius: 8px;
+        }
+        .preview-body .preview-text {
+            background: rgba(0,0,0,0.3);
+            padding: 1.5rem;
+            border-radius: 8px;
+            width: 100%;
+            max-height: 60vh;
+            overflow: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .preview-footer {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            background: rgba(0,0,0,0.3);
+        }
+        .preview-info {
+            text-align: center;
+            padding: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
         /* Options Panel */
         .options-panel {
             background: var(--bg-card);
@@ -1367,12 +1478,29 @@
                 <div id="previewArea"></div>
                 <div class="action-area">
                     <button class="process-btn" id="processBtn" disabled>Process</button>
+                    <button class="preview-btn" id="previewBtn" style="display:none;"><i class="fas fa-eye"></i> Preview</button>
                     <button class="download-btn" id="downloadBtn" style="display:none;"><i class="fas fa-download"></i> Download</button>
                 </div>
                 <div class="progress-container" id="progressContainer">
                     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
                     <div class="progress-text" id="progressText">Processing...</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="preview-modal" id="previewModal">
+        <div class="preview-content">
+            <div class="preview-header">
+                <h3><i class="fas fa-eye"></i> Preview</h3>
+                <button class="preview-close" onclick="closePreview()">&times;</button>
+            </div>
+            <div class="preview-body" id="previewBody"></div>
+            <div class="preview-info" id="previewInfo"></div>
+            <div class="preview-footer">
+                <button class="preview-btn" onclick="closePreview()"><i class="fas fa-times"></i> Close</button>
+                <button class="download-btn" onclick="confirmDownload()"><i class="fas fa-download"></i> Download</button>
             </div>
         </div>
     </div>
@@ -1669,6 +1797,7 @@
             enhanceSelects(document.getElementById('optionsArea'));
             document.getElementById('previewArea').innerHTML = '';
             document.getElementById('progressContainer').classList.remove('active');
+            document.getElementById('previewBtn').style.display = 'none';
             document.getElementById('downloadBtn').style.display = 'none';
             document.getElementById('toolModal').classList.add('active');
             uploadedFiles = []; processedBlob = null; selectedPages.clear(); lastProcessDone = false;
@@ -1696,6 +1825,7 @@
             Array.from(files).forEach(f => uploadedFiles.push(f));
             // Discard any previous result so a stale file can never be downloaded.
             processedBlob = null;
+            document.getElementById('previewBtn').style.display = 'none';
             document.getElementById('downloadBtn').style.display = 'none';
             document.getElementById('progressContainer').classList.remove('active');
             renderFileList();
@@ -1744,12 +1874,12 @@
 
         async function processFiles() {
             const tool = currentTool, cfg = TOOLS[tool];
-            const prog = document.getElementById('progressContainer'), fill = document.getElementById('progressFill'), text = document.getElementById('progressText'), dlBtn = document.getElementById('downloadBtn');
-            prog.classList.add('active'); dlBtn.style.display = 'none'; fill.style.width = '0%'; fill.style.background = ''; text.textContent = 'Processing...';
+            const prog = document.getElementById('progressContainer'), fill = document.getElementById('progressFill'), text = document.getElementById('progressText'), dlBtn = document.getElementById('downloadBtn'), prvBtn = document.getElementById('previewBtn');
+            prog.classList.add('active'); dlBtn.style.display = 'none'; prvBtn.style.display = 'none'; fill.style.width = '0%'; fill.style.background = ''; text.textContent = 'Processing...';
             try {
                 if (cfg.server) await processServer(tool, fill, text);
                 else await processLocal(tool, fill, text);
-                fill.style.width = '100%'; text.textContent = 'Complete!'; dlBtn.style.display = 'inline-flex';
+                fill.style.width = '100%'; text.textContent = 'Complete!'; prvBtn.style.display = 'inline-flex'; dlBtn.style.display = 'inline-flex';
                 lastProcessDone = true;
             } catch (e) { text.textContent = 'Error: ' + e.message; fill.style.background = '#ef4444'; }
         }
@@ -2388,9 +2518,68 @@
             outputFileName = 'presentation.pptx';
         }
 
+        // Preview functionality
+        function openPreview() {
+            if (!processedBlob) return;
+            const previewModal = document.getElementById('previewModal');
+            const previewBody = document.getElementById('previewBody');
+            const previewInfo = document.getElementById('previewInfo');
+
+            previewBody.innerHTML = '';
+            const fileType = processedBlob.type;
+            const fileSize = (processedBlob.size / 1024).toFixed(2);
+            const url = URL.createObjectURL(processedBlob);
+
+            previewInfo.textContent = `File: ${outputFileName} | Size: ${fileSize} KB | Type: ${fileType || 'unknown'}`;
+
+            if (fileType.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = 'Preview';
+                previewBody.appendChild(img);
+            } else if (fileType === 'application/pdf') {
+                const embed = document.createElement('embed');
+                embed.src = url;
+                embed.type = 'application/pdf';
+                previewBody.appendChild(embed);
+            } else if (fileType.startsWith('text/') || fileType === 'application/json') {
+                processedBlob.text().then(text => {
+                    const pre = document.createElement('div');
+                    pre.className = 'preview-text';
+                    pre.textContent = text.substring(0, 50000) + (text.length > 50000 ? '\n\n... (truncated)' : '');
+                    previewBody.appendChild(pre);
+                });
+            } else {
+                previewBody.innerHTML = `
+                    <div style="text-align:center; padding: 3rem;">
+                        <i class="fas fa-file" style="font-size: 4rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                        <h3 style="margin-bottom: 0.5rem;">${outputFileName}</h3>
+                        <p style="color: var(--text-muted);">Preview not available for this file type.</p>
+                        <p style="color: var(--text-muted);">Click Download to save the file.</p>
+                    </div>`;
+            }
+
+            previewModal.classList.add('active');
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').classList.remove('active');
+        }
+
+        function confirmDownload() {
+            if (!processedBlob) return;
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(processedBlob);
+            a.download = outputFileName;
+            a.click();
+            closePreview();
+        }
+
+        document.getElementById('previewBtn').onclick = openPreview;
         document.getElementById('downloadBtn').onclick = () => { if (!processedBlob) return; const a = document.createElement('a'); a.href = URL.createObjectURL(processedBlob); a.download = outputFileName; a.click(); };
         document.getElementById('toolModal').onclick = e => { if (e.target.id === 'toolModal') closeModal(); };
-        document.onkeydown = e => { if (e.key === 'Escape') { closeModal(); closePage(); closeAuth(); } };
+        document.onkeydown = e => { if (e.key === 'Escape') { closePreview(); closeModal(); closePage(); closeAuth(); } };
+        document.getElementById('previewModal').onclick = e => { if (e.target.id === 'previewModal') closePreview(); };
 
         // ==================== FIREBASE AUTH ====================
         // Firebase config - REPLACE WITH YOUR CONFIG FROM FIREBASE CONSOLE
