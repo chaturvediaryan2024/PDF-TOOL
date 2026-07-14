@@ -1774,22 +1774,58 @@
             let targetKb = parseInt(gv('targetSize')) * (gv('sizeUnit') === 'mb' ? 1024 : 1);
             if (!targetKb || targetKb < 5) targetKb = 200; // sensible default if left blank
             const targetBytes = targetKb * 1024;
-            const { PDFDocument } = PDFLib, pdfBytes = await uploadedFiles[0].arrayBuffer(), pdf = await PDFDocument.load(pdfBytes);
-            if (pdfBytes.byteLength <= targetBytes) { processedBlob = new Blob([pdfBytes], { type: 'application/pdf' }); outputFileName = 'compressed.pdf'; return; }
-            const pages = pdf.getPages(); let quality = 0.7, scale = 1.0, compressed = await pdf.save(), attempts = 0;
-            while (compressed.byteLength > targetBytes && attempts < 10) {
-                attempts++; text.textContent = `Attempt ${attempts}...`; fill.style.width = `${30 + attempts*6}%`;
-                const newPdf = await PDFDocument.create();
-                for (let i = 0; i < pages.length; i++) {
-                    const { width, height } = pages[i].getSize(), canvas = document.createElement('canvas'), pdfjsDoc = await pdfjsLib.getDocument(compressed).promise, pdfPage = await pdfjsDoc.getPage(i + 1), viewport = pdfPage.getViewport({ scale });
-                    canvas.width = viewport.width; canvas.height = viewport.height; await pdfPage.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-                    const imgBytes = Uint8Array.from(atob(canvas.toDataURL('image/jpeg', quality).split(',')[1]), c => c.charCodeAt(0)), img = await newPdf.embedJpg(imgBytes);
-                    newPdf.addPage([width, height]).drawImage(img, { x: 0, y: 0, width, height });
+            const { PDFDocument } = PDFLib;
+            const srcBytes = new Uint8Array(await uploadedFiles[0].arrayBuffer());
+            // Already small enough → keep original untouched.
+            if (srcBytes.byteLength <= targetBytes) { processedBlob = new Blob([srcBytes], { type: 'application/pdf' }); outputFileName = 'compressed.pdf'; return; }
+
+            text.textContent = 'Reading PDF...'; fill.style.width = '10%';
+            // Load into pdf.js ONCE (slice() so the buffer isn't detached), reuse across all renders.
+            const pdfjsDoc = await pdfjsLib.getDocument({ data: srcBytes.slice() }).promise;
+            const numPages = pdfjsDoc.numPages;
+
+            // Render every page to JPEG at the given scale/quality and assemble a new PDF.
+            async function build(scale, quality) {
+                const out = await PDFDocument.create();
+                for (let i = 1; i <= numPages; i++) {
+                    const page = await pdfjsDoc.getPage(i);
+                    const vp = page.getViewport({ scale });
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1, Math.floor(vp.width));
+                    canvas.height = Math.max(1, Math.floor(vp.height));
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+                    const jpg = Uint8Array.from(atob(canvas.toDataURL('image/jpeg', quality).split(',')[1]), c => c.charCodeAt(0));
+                    const img = await out.embedJpg(jpg);
+                    out.addPage([canvas.width, canvas.height]).drawImage(img, { x: 0, y: 0, width: canvas.width, height: canvas.height });
                 }
-                compressed = await newPdf.save();
-                if (compressed.byteLength > targetBytes) { if (quality > 0.2) quality -= 0.15; else scale *= 0.85; }
+                return out.save();
             }
-            processedBlob = new Blob([compressed], { type: 'application/pdf' }); outputFileName = `compressed_${Math.round(compressed.byteLength/1024)}kb.pdf`;
+
+            // Search from high→low: first result under target keeps the best possible quality.
+            const scales = [1.2, 1.0, 0.85, 0.7, 0.55, 0.45];
+            const qualities = [0.82, 0.65, 0.5, 0.38, 0.28, 0.2];
+            let result = null, step = 0, totalSteps = scales.length * qualities.length;
+            for (const scale of scales) {
+                for (const quality of qualities) {
+                    step++;
+                    text.textContent = `Compressing... (try ${step})`;
+                    fill.style.width = `${15 + step / totalSteps * 75}%`;
+                    const bytes = await build(scale, quality);
+                    result = bytes;
+                    if (bytes.byteLength <= targetBytes) {
+                        fill.style.width = '95%';
+                        processedBlob = new Blob([bytes], { type: 'application/pdf' });
+                        outputFileName = `compressed_${Math.round(bytes.byteLength / 1024)}kb.pdf`;
+                        return;
+                    }
+                }
+            }
+            // Couldn't get under target even at lowest settings → return the smallest achieved.
+            fill.style.width = '95%';
+            processedBlob = new Blob([result], { type: 'application/pdf' });
+            outputFileName = `compressed_${Math.round(result.byteLength / 1024)}kb.pdf`;
         }
 
         async function resizeImages(fill, text) {
