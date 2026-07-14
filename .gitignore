@@ -3,3 +3,10 @@ uploads/
 output/
 *.log
 .DS_Store
+
+# Oracle server credentials - DO NOT PUSH
+oracle-server/
+*.key
+*.key.pub
+*.ovpn
+*.conf
