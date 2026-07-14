@@ -1,0 +1,9 @@
+# Render Blueprint — auto-configures the web service on deploy.
+services:
+  - type: web
+    name: pdf-tool
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    healthCheckPath: /api/health
