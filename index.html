@@ -14,9 +14,6 @@
     <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
@@ -444,101 +441,6 @@
         .icon-lock { background: #a855f7; color: white; }
 
         .nav-right { display: flex; align-items: center; gap: 1rem; }
-        #authButtons { display: flex; align-items: center; gap: 1.25rem; }
-        .btn-login { color: var(--text-muted); text-decoration: none; font-weight: 500; transition: color 0.3s; white-space: nowrap; }
-        .btn-login:hover { color: var(--text); }
-        .btn-signup {
-            padding: 0.6rem 1.5rem;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        .btn-signup:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(168,85,247,0.3); }
-
-        /* User Profile */
-        .user-avatar {
-            width: 40px; height: 40px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.3s;
-        }
-        .user-avatar:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(168,85,247,0.4); }
-        .user-menu {
-            position: absolute; top: 100%; right: 0; margin-top: 10px;
-            background: rgba(20,20,30,0.98); border: 1px solid var(--border);
-            border-radius: 12px; padding: 1rem; min-width: 200px;
-            display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        .user-menu.active { display: block; }
-        .user-info { padding-bottom: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 0.5rem; }
-        .user-info span { display: block; }
-        .user-info #userName { font-weight: 600; color: var(--text); }
-        .user-info #userEmail { font-size: 0.85rem; color: var(--text-muted); }
-        .user-menu a { display: flex; align-items: center; gap: 10px; color: var(--text-muted); text-decoration: none; padding: 0.5rem 0; transition: color 0.3s; }
-        .user-menu a:hover { color: #ef4444; }
-
-        /* Auth Modal */
-        .auth-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 100000;
-            display: none; justify-content: center; align-items: center;
-        }
-        .auth-modal.active { display: flex; }
-        .auth-content {
-            background: linear-gradient(135deg, rgba(20,20,30,0.98), rgba(15,15,25,0.98));
-            border: 1px solid var(--border); border-radius: 24px;
-            width: 100%; max-width: 420px; padding: 2.5rem;
-            position: relative; box-shadow: 0 0 80px rgba(168,85,247,0.2);
-        }
-        .auth-close {
-            position: absolute; top: 1rem; right: 1rem;
-            background: none; border: none; color: var(--text-muted);
-            font-size: 1.5rem; cursor: pointer; transition: color 0.3s;
-        }
-        .auth-close:hover { color: #ef4444; }
-        .auth-header { text-align: center; margin-bottom: 2rem; }
-        .auth-logo {
-            width: 60px; height: 60px; margin: 0 auto 1rem;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 16px; display: flex; align-items: center; justify-content: center;
-            font-size: 1.8rem; color: white;
-        }
-        .auth-header h2 { margin-bottom: 0.5rem; }
-        .auth-header p { color: var(--text-muted); }
-        .auth-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; display: none; font-size: 0.9rem; }
-        .auth-error.active { display: block; }
-        .auth-input-group { margin-bottom: 1.25rem; }
-        .auth-input-group label { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; }
-        .auth-input-group input {
-            width: 100%; padding: 0.9rem 1rem; background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border); border-radius: 10px; color: var(--text);
-            font-size: 1rem; transition: all 0.3s;
-        }
-        .auth-input-group input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(168,85,247,0.1); }
-        .auth-submit {
-            width: 100%; padding: 1rem; background: linear-gradient(135deg, var(--primary), var(--accent));
-            border: none; border-radius: 10px; color: white; font-size: 1rem;
-            font-weight: 600; cursor: pointer; transition: all 0.3s;
-        }
-        .auth-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(168,85,247,0.3); }
-        .auth-divider { text-align: center; margin: 1.5rem 0; color: var(--text-muted); position: relative; }
-        .auth-divider::before, .auth-divider::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: var(--border); }
-        .auth-divider::before { left: 0; }
-        .auth-divider::after { right: 0; }
-        .auth-google {
-            width: 100%; padding: 0.9rem; background: white; border: none;
-            border-radius: 10px; color: #333; font-size: 0.95rem; font-weight: 500;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: all 0.3s;
-        }
-        .auth-google:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .auth-switch { text-align: center; margin-top: 1.5rem; color: var(--text-muted); }
-        .auth-switch a { color: var(--primary); text-decoration: none; font-weight: 600; margin-left: 5px; }
-        .auth-switch a:hover { text-decoration: underline; }
-
         /* Hero */
         .hero {
             position: relative;
@@ -1218,22 +1120,11 @@
             .navbar { padding: 0.75rem 1rem; }
             .logo { font-size: 1.2rem; gap: 8px; }
             .logo-icon { font-size: 1.5rem; }
-            .nav-right { gap: 0.5rem; }
-            #authButtons { gap: 0.5rem; }
-            .btn-login { font-size: 0.85rem; }
-            .btn-signup { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
-            .user-avatar { width: 32px; height: 32px; }
         }
         @media (max-width: 480px) {
             .navbar { padding: 0.5rem 0.75rem; }
             .logo { font-size: 1rem; gap: 6px; }
             .logo-icon { font-size: 1.3rem; }
-            .logo span { display: inline; }
-            .nav-right { gap: 0.4rem; }
-            #authButtons { gap: 0.4rem; }
-            .btn-login { font-size: 0.75rem; padding: 0.3rem 0.5rem; }
-            .btn-signup { padding: 0.35rem 0.6rem; font-size: 0.75rem; }
-            .user-avatar { width: 28px; height: 28px; }
         }
 
         /* Scrollbar */
@@ -1338,24 +1229,6 @@
                 </li>
             </ul>
 
-            <div class="nav-right" id="navRight">
-                <div id="authButtons">
-                    <a href="#" class="btn-login" onclick="openAuth('login')">Login</a>
-                    <a href="#" class="btn-signup" onclick="openAuth('signup')">Sign Up <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <div id="userProfile" style="display:none;">
-                    <div class="user-avatar" onclick="toggleUserMenu()">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="user-menu" id="userMenu">
-                        <div class="user-info">
-                            <span id="userName">User</span>
-                            <span id="userEmail">email@example.com</span>
-                        </div>
-                        <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                    </div>
-                </div>
-            </div>
         </div>
     </nav>
 
@@ -1445,44 +1318,6 @@
         </div>
     </div>
 
-    <!-- Auth Modal -->
-    <div class="auth-modal" id="authModal">
-        <div class="auth-content">
-            <button class="auth-close" onclick="closeAuth()">&times;</button>
-            <div class="auth-header">
-                <div class="auth-logo"><i class="fas fa-infinity"></i></div>
-                <h2 id="authTitle">Welcome Back</h2>
-                <p id="authSubtitle">Login to your account</p>
-            </div>
-            <div class="auth-body">
-                <div id="authError" class="auth-error"></div>
-                <form id="authForm" onsubmit="handleAuth(event)">
-                    <div class="auth-input-group" id="nameGroup" style="display:none;">
-                        <label><i class="fas fa-user"></i> Full Name</label>
-                        <input type="text" id="authName" placeholder="Enter your name">
-                    </div>
-                    <div class="auth-input-group">
-                        <label><i class="fas fa-envelope"></i> Email</label>
-                        <input type="email" id="authEmail" placeholder="Enter your email" required>
-                    </div>
-                    <div class="auth-input-group">
-                        <label><i class="fas fa-lock"></i> Password</label>
-                        <input type="password" id="authPassword" placeholder="Enter your password" required>
-                    </div>
-                    <button type="submit" class="auth-submit" id="authSubmit">Login</button>
-                </form>
-                <div class="auth-divider"><span>or continue with</span></div>
-                <button class="auth-google" onclick="googleLogin()">
-                    <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                    Continue with Google
-                </button>
-                <div class="auth-switch">
-                    <span id="authSwitchText">Don't have an account?</span>
-                    <a href="#" id="authSwitchLink" onclick="switchAuth()">Sign Up</a>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Modal -->
     <div class="modal" id="toolModal">
@@ -3086,159 +2921,8 @@
         document.getElementById('previewBtn').onclick = openPreview;
         document.getElementById('downloadBtn').onclick = () => { if (!processedBlob) return; const a = document.createElement('a'); a.href = URL.createObjectURL(processedBlob); a.download = outputFileName; a.click(); };
         document.getElementById('toolModal').onclick = e => { if (e.target.id === 'toolModal') closeModal(); };
-        document.onkeydown = e => { if (e.key === 'Escape') { closePreview(); closeModal(); closePage(); closeAuth(); } };
+        document.onkeydown = e => { if (e.key === 'Escape') { closePreview(); closeModal(); closePage(); } };
         document.getElementById('previewModal').onclick = e => { if (e.target.id === 'previewModal') closePreview(); };
-
-        // ==================== FIREBASE AUTH ====================
-        // Firebase config - REPLACE WITH YOUR CONFIG FROM FIREBASE CONSOLE
-        const firebaseConfig = {
-            apiKey: "AIzaSyCJkGWPjt4osQEgGkmjFdQynAFdD5GfmTQ",
-            authDomain: "pdf-tool-f1b22.firebaseapp.com",
-            projectId: "pdf-tool-f1b22",
-            storageBucket: "pdf-tool-f1b22.firebasestorage.app",
-            messagingSenderId: "204527419068",
-            appId: "1:204527419068:web:f0c1bed80bdef7ab4c1ab9"
-        };
-
-        // Initialize Firebase
-        let firebaseApp, auth;
-        try {
-            firebaseApp = firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-        } catch (e) {
-            console.log('Firebase not configured yet');
-        }
-
-        let currentAuthMode = 'login';
-
-        function openAuth(mode) {
-            currentAuthMode = mode;
-            const modal = document.getElementById('authModal');
-            const title = document.getElementById('authTitle');
-            const subtitle = document.getElementById('authSubtitle');
-            const nameGroup = document.getElementById('nameGroup');
-            const submit = document.getElementById('authSubmit');
-            const switchText = document.getElementById('authSwitchText');
-            const switchLink = document.getElementById('authSwitchLink');
-            const error = document.getElementById('authError');
-
-            error.classList.remove('active');
-            document.getElementById('authForm').reset();
-
-            if (mode === 'login') {
-                title.textContent = 'Welcome Back';
-                subtitle.textContent = 'Login to your account';
-                nameGroup.style.display = 'none';
-                submit.textContent = 'Login';
-                switchText.textContent = "Don't have an account?";
-                switchLink.textContent = 'Sign Up';
-            } else {
-                title.textContent = 'Create Account';
-                subtitle.textContent = 'Sign up to get started';
-                nameGroup.style.display = 'block';
-                submit.textContent = 'Sign Up';
-                switchText.textContent = 'Already have an account?';
-                switchLink.textContent = 'Login';
-            }
-
-            modal.classList.add('active');
-        }
-
-        function closeAuth() {
-            document.getElementById('authModal').classList.remove('active');
-        }
-
-        function switchAuth() {
-            openAuth(currentAuthMode === 'login' ? 'signup' : 'login');
-        }
-
-        function showAuthError(message) {
-            const error = document.getElementById('authError');
-            error.textContent = message;
-            error.classList.add('active');
-        }
-
-        async function handleAuth(e) {
-            e.preventDefault();
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            const name = document.getElementById('authName').value;
-
-            if (!auth) {
-                showAuthError('Authentication not configured. Please set up Firebase.');
-                return;
-            }
-
-            try {
-                if (currentAuthMode === 'login') {
-                    await auth.signInWithEmailAndPassword(email, password);
-                } else {
-                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                    if (name) await userCredential.user.updateProfile({ displayName: name });
-                }
-                closeAuth();
-            } catch (error) {
-                let msg = error.message;
-                if (error.code === 'auth/user-not-found') msg = 'No account found with this email';
-                else if (error.code === 'auth/wrong-password') msg = 'Incorrect password';
-                else if (error.code === 'auth/email-already-in-use') msg = 'Email already registered';
-                else if (error.code === 'auth/weak-password') msg = 'Password should be at least 6 characters';
-                showAuthError(msg);
-            }
-        }
-
-        async function googleLogin() {
-            if (!auth) {
-                showAuthError('Authentication not configured. Please set up Firebase.');
-                return;
-            }
-            try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                await auth.signInWithPopup(provider);
-                closeAuth();
-            } catch (error) {
-                showAuthError(error.message);
-            }
-        }
-
-        function toggleUserMenu() {
-            document.getElementById('userMenu').classList.toggle('active');
-        }
-
-        async function logout() {
-            if (auth) await auth.signOut();
-            document.getElementById('userMenu').classList.remove('active');
-        }
-
-        // Auth state listener
-        if (auth) {
-            auth.onAuthStateChanged(user => {
-                const authButtons = document.getElementById('authButtons');
-                const userProfile = document.getElementById('userProfile');
-
-                if (user) {
-                    authButtons.style.display = 'none';
-                    userProfile.style.display = 'block';
-                    document.getElementById('userName').textContent = user.displayName || 'User';
-                    document.getElementById('userEmail').textContent = user.email;
-                } else {
-                    authButtons.style.display = 'flex';
-                    userProfile.style.display = 'none';
-                }
-            });
-        }
-
-        // Close user menu on outside click
-        document.addEventListener('click', e => {
-            const profile = document.getElementById('userProfile');
-            if (!profile.contains(e.target)) {
-                document.getElementById('userMenu').classList.remove('active');
-            }
-        });
-
-        document.getElementById('authModal').onclick = e => {
-            if (e.target.id === 'authModal') closeAuth();
-        };
 
         // Page content
         const pageData = {
