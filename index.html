@@ -1664,11 +1664,32 @@
         function closeModal() { document.getElementById('toolModal').classList.remove('active'); currentTool = ''; }
 
         const uploadZone = document.getElementById('uploadZone'), fileInput = document.getElementById('fileInput');
-        uploadZone.onclick = () => fileInput.click();
+
+        // Hide cursor when file dialog opens
+        function hideCursorEffects() {
+            const orb = document.getElementById('mouseOrb');
+            const dot = document.getElementById('centerDot');
+            const trails = document.querySelectorAll('.dot-trail');
+            if (orb) orb.style.opacity = '0';
+            if (dot) dot.style.opacity = '0';
+            trails.forEach(t => t.style.opacity = '0');
+        }
+        function showCursorEffects() {
+            const orb = document.getElementById('mouseOrb');
+            const dot = document.getElementById('centerDot');
+            const trails = document.querySelectorAll('.dot-trail');
+            if (orb) orb.style.opacity = '1';
+            if (dot) dot.style.opacity = '1';
+            trails.forEach((t, i) => t.style.opacity = (1 - i / 6) * 0.6);
+        }
+
+        uploadZone.onclick = () => { hideCursorEffects(); fileInput.click(); };
+        fileInput.onchange = () => { showCursorEffects(); handleFiles(fileInput.files); };
+        window.addEventListener('focus', showCursorEffects);
+
         uploadZone.ondragover = e => { e.preventDefault(); uploadZone.classList.add('dragover'); };
         uploadZone.ondragleave = () => uploadZone.classList.remove('dragover');
         uploadZone.ondrop = e => { e.preventDefault(); uploadZone.classList.remove('dragover'); handleFiles(e.dataTransfer.files); };
-        fileInput.onchange = () => handleFiles(fileInput.files);
 
         function handleFiles(files) {
             const cfg = TOOLS[currentTool];
