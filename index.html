@@ -13,6 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -1296,6 +1297,7 @@
                             </div>
                             <div class="mega-column">
                                 <h5>PDF Security</h5>
+                                <a href="#" class="dropdown-item" onclick="openTool('protect')"><span class="icon-sm icon-lock"><i class="fas fa-lock"></i></span> Protect PDF</a>
                                 <a href="#" class="dropdown-item" onclick="openTool('unlock')"><span class="icon-sm icon-lock"><i class="fas fa-unlock"></i></span> Unlock PDF</a>
                                 <a href="#" class="dropdown-item" onclick="openTool('sign')"><span class="icon-sm icon-compress"><i class="fas fa-signature"></i></span> Sign PDF</a>
                                 <a href="#" class="dropdown-item" onclick="openTool('redact')"><span class="icon-sm icon-split"><i class="fas fa-eraser"></i></span> Redact PDF</a>
@@ -1381,6 +1383,7 @@
             <div class="tool-card" data-category="edit" onclick="openTool('edit-pdf')"><div class="icon bg-primary"><i class="fas fa-edit"></i></div><h4>Edit PDF</h4><p>Add text & images</p></div>
             <div class="tool-card" data-category="edit" onclick="openTool('add-header-footer')"><div class="icon bg-edit"><i class="fas fa-heading"></i></div><h4>Header & Footer</h4><p>Add headers</p></div>
             <!-- SECURITY -->
+            <div class="tool-card" data-category="security" onclick="openTool('protect')"><div class="icon bg-security"><i class="fas fa-lock"></i></div><h4>Protect PDF</h4><p>Add password</p></div>
             <div class="tool-card" data-category="security" onclick="openTool('unlock')"><div class="icon bg-security"><i class="fas fa-unlock"></i></div><h4>Unlock PDF</h4><p>Remove password</p></div>
             <div class="tool-card" data-category="security" onclick="openTool('sign')"><div class="icon bg-sign"><i class="fas fa-signature"></i></div><h4>Sign PDF</h4><p>Add signature</p></div>
             <div class="tool-card" data-category="security" onclick="openTool('redact')"><div class="icon bg-security"><i class="fas fa-eraser"></i></div><h4>Redact PDF</h4><p>Hide sensitive info</p></div>
@@ -2100,7 +2103,69 @@
         }
 
         async function protectPdf(fill, text) {
-            throw new Error('Password protection requires server-side processing. Browser cannot encrypt PDFs. Use Adobe Acrobat or desktop software.');
+            const password = gv('protectPassword');
+            const confirm = gv('confirmPassword');
+            if (!password) throw new Error('Enter a password');
+            if (password !== confirm) throw new Error('Passwords do not match');
+
+            text.textContent = 'Reading PDF...'; fill.style.width = '10%';
+            const file = uploadedFiles[0];
+            const arrayBuffer = await file.arrayBuffer();
+
+            // Load PDF with pdf.js to render pages
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            const totalPages = pdf.numPages;
+
+            text.textContent = 'Creating protected PDF...'; fill.style.width = '20%';
+
+            // Get first page to determine dimensions
+            const firstPage = await pdf.getPage(1);
+            const viewport = firstPage.getViewport({ scale: 2 });
+
+            // Create jsPDF with encryption
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: viewport.width > viewport.height ? 'l' : 'p',
+                unit: 'pt',
+                format: [viewport.width / 2, viewport.height / 2],
+                encryption: {
+                    userPassword: password,
+                    ownerPassword: password,
+                    userPermissions: ['print', 'copy']
+                }
+            });
+
+            // Render each page as image and add to jsPDF
+            for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                text.textContent = `Processing page ${pageNum}/${totalPages}...`;
+                fill.style.width = (20 + (pageNum / totalPages) * 70) + '%';
+
+                const page = await pdf.getPage(pageNum);
+                const pageViewport = page.getViewport({ scale: 2 });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = pageViewport.width;
+                canvas.height = pageViewport.height;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                await page.render({ canvasContext: ctx, viewport: pageViewport }).promise;
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+                if (pageNum > 1) {
+                    doc.addPage([pageViewport.width / 2, pageViewport.height / 2], pageViewport.width > pageViewport.height ? 'l' : 'p');
+                }
+
+                doc.addImage(imgData, 'JPEG', 0, 0, pageViewport.width / 2, pageViewport.height / 2);
+            }
+
+            text.textContent = 'Applying encryption...'; fill.style.width = '95%';
+
+            const pdfBlob = doc.output('blob');
+            processedBlob = pdfBlob;
+            outputFileName = 'protected.pdf';
         }
 
         async function unlockPdf(fill, text) {
