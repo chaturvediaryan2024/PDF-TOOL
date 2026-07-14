@@ -1494,10 +1494,10 @@
             'protect': { title: 'Protect PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Protect', out: 'protected.pdf', server: true, icon: 'fa-lock', options: `<h4><i class="fas fa-lock"></i> Password</h4><div class="option-group"><label>Password</label><input type="password" id="protectPassword"></div><div class="option-group"><label>Confirm</label><input type="password" id="confirmPassword"></div>` },
             'unlock': { title: 'Unlock PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Unlock', out: 'unlocked.pdf', server: true, icon: 'fa-unlock', options: `<h4><i class="fas fa-unlock"></i> Password</h4><div class="option-group"><label>Current Password</label><input type="password" id="unlockPassword"></div>` },
             'sign': { title: 'Sign PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Sign', out: 'signed.pdf', server: false, preview: true, icon: 'fa-signature', options: `<h4><i class="fas fa-signature"></i> Signature</h4><div class="signature-pad"><canvas id="signatureCanvas"></canvas><div class="sig-actions"><button type="button" onclick="clearSignature()"><i class="fas fa-eraser"></i> Clear</button></div></div><div class="option-row" style="margin-top:1rem"><div class="option-group"><label>Page</label><input type="number" id="sigPage" value="1" min="1"></div><div class="option-group"><label>X</label><input type="number" id="sigX" value="100"></div><div class="option-group"><label>Y</label><input type="number" id="sigY" value="100"></div><div class="option-group"><label>Width</label><input type="number" id="sigWidth" value="150"></div></div>` },
-            'redact': { title: 'Redact PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Redact', out: 'redacted.pdf', server: true, icon: 'fa-eraser', options: `<h4><i class="fas fa-eraser"></i> Redaction</h4><div class="option-group"><label>Text to redact (one per line)</label><textarea id="redactText"></textarea></div>` },
+            'redact': { title: 'Redact PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Redact', out: 'redacted.pdf', server: false, icon: 'fa-eraser', options: `<h4><i class="fas fa-eraser"></i> Redaction</h4><div class="option-group"><label>Text to redact (one per line)</label><textarea id="redactText"></textarea></div>` },
             'compare': { title: 'Compare PDFs', accept: '.pdf', multiple: true, hint: 'Select 2 PDFs', btn: 'Compare', out: 'comparison.pdf', server: true, icon: 'fa-balance-scale' },
             'flatten': { title: 'Flatten PDF', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Flatten', out: 'flattened.pdf', server: true, icon: 'fa-layer-group' },
-            'grayscale': { title: 'Grayscale', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Convert', out: 'grayscale.pdf', server: true, icon: 'fa-adjust' },
+            'grayscale': { title: 'Grayscale', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Convert', out: 'grayscale.pdf', server: false, icon: 'fa-adjust' },
             'pdf-info': { title: 'PDF Info', accept: '.pdf', multiple: false, hint: 'Select PDF', btn: 'Get Info', out: 'info.txt', server: true, icon: 'fa-info-circle' }
         };
 
@@ -1623,12 +1623,11 @@
             fill.style.width = '60%'; text.textContent = 'Processing...';
             if (!res.ok) throw new Error(await res.text());
             fill.style.width = '80%'; text.textContent = 'Preparing download...';
-            if (tool === 'pdf-info') {
-                const info = await res.json();
-                let t = 'PDF Info\n' + '='.repeat(40) + '\n';
-                Object.entries(info).forEach(([k,v]) => t += `${k}: ${v}\n`);
-                processedBlob = new Blob([t], { type: 'text/plain' });
-                outputFileName = 'pdf-info.txt';
+            if (tool === 'pdf-info' || tool === 'compare') {
+                const data = await res.json();
+                const body = data.info || Object.entries(data).map(([k, v]) => `${k}: ${v}`).join('\n');
+                processedBlob = new Blob([body], { type: 'text/plain' });
+                outputFileName = tool === 'compare' ? 'comparison.txt' : 'pdf-info.txt';
             } else {
                 const result = await res.json();
                 if (result.downloadUrl) {
@@ -1641,6 +1640,8 @@
 
         async function processLocal(tool, fill, text) {
             if (tool === 'rotate') await rotatePdf(fill, text);
+            else if (tool === 'grayscale') await grayscalePdf(fill, text);
+            else if (tool === 'redact') await redactPdf(fill, text);
             else if (tool === 'txt-to-pdf') await txtToPdf(fill, text);
             else if (tool === 'word-to-pdf') await wordToPdf(fill, text);
             else if (tool === 'excel-to-pdf') await excelToPdf(fill, text);
@@ -1661,6 +1662,76 @@
             else if (tool === 'edit-pdf') await editPdf(fill, text);
             else if (tool === 'add-header-footer') await addHeaderFooter(fill, text);
             else if (tool === 'sign') await signPdf(fill, text);
+        }
+
+        async function grayscalePdf(fill, text) {
+            const { PDFDocument } = PDFLib;
+            const srcBytes = new Uint8Array(await uploadedFiles[0].arrayBuffer());
+            text.textContent = 'Reading PDF...'; fill.style.width = '12%';
+            const pdfjsDoc = await pdfjsLib.getDocument({ data: srcBytes.slice() }).promise;
+            const out = await PDFDocument.create(), n = pdfjsDoc.numPages;
+            for (let i = 1; i <= n; i++) {
+                text.textContent = `Converting ${i}/${n}`; fill.style.width = `${12 + i / n * 82}%`;
+                const page = await pdfjsDoc.getPage(i);
+                const vp = page.getViewport({ scale: 2 });
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, Math.floor(vp.width)); canvas.height = Math.max(1, Math.floor(vp.height));
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                await page.render({ canvasContext: ctx, viewport: vp }).promise;
+                // Convert every pixel to gray (luminance formula).
+                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height), d = imgData.data;
+                for (let p = 0; p < d.length; p += 4) {
+                    const g = Math.round(0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2]);
+                    d[p] = d[p + 1] = d[p + 2] = g;
+                }
+                ctx.putImageData(imgData, 0, 0);
+                const jpg = Uint8Array.from(atob(canvas.toDataURL('image/jpeg', 0.9).split(',')[1]), c => c.charCodeAt(0));
+                const img = await out.embedJpg(jpg);
+                const dims = page.getViewport({ scale: 1 });
+                out.addPage([dims.width, dims.height]).drawImage(img, { x: 0, y: 0, width: dims.width, height: dims.height });
+            }
+            fill.style.width = '98%';
+            processedBlob = new Blob([await out.save()], { type: 'application/pdf' });
+            outputFileName = 'grayscale.pdf';
+        }
+
+        async function redactPdf(fill, text) {
+            const terms = (gv('redactText') || '').split('\n').map(t => t.trim().toLowerCase()).filter(Boolean);
+            if (!terms.length) throw new Error('Enter the text to redact (one word/phrase per line)');
+            const { PDFDocument } = PDFLib;
+            const srcBytes = new Uint8Array(await uploadedFiles[0].arrayBuffer());
+            text.textContent = 'Reading PDF...'; fill.style.width = '10%';
+            const pdfjsDoc = await pdfjsLib.getDocument({ data: srcBytes.slice() }).promise;
+            const out = await PDFDocument.create(), n = pdfjsDoc.numPages, scale = 2;
+            for (let i = 1; i <= n; i++) {
+                text.textContent = `Redacting ${i}/${n}`; fill.style.width = `${10 + i / n * 85}%`;
+                const page = await pdfjsDoc.getPage(i);
+                const vp = page.getViewport({ scale });
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, Math.floor(vp.width)); canvas.height = Math.max(1, Math.floor(vp.height));
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                await page.render({ canvasContext: ctx, viewport: vp }).promise;
+                // Find matching text runs and paint solid black over them (burned into the image).
+                const tc = await page.getTextContent();
+                ctx.fillStyle = '#000';
+                for (const item of tc.items) {
+                    const s = (item.str || '').toLowerCase();
+                    if (s && terms.some(t => s.includes(t))) {
+                        const tr = pdfjsLib.Util.transform(vp.transform, item.transform);
+                        const h = Math.hypot(tr[2], tr[3]) || (item.height * scale), w = (item.width || 0) * scale;
+                        ctx.fillRect(tr[4] - 2, tr[5] - h, w + 4, h + 4);
+                    }
+                }
+                const jpg = Uint8Array.from(atob(canvas.toDataURL('image/jpeg', 0.92).split(',')[1]), c => c.charCodeAt(0));
+                const img = await out.embedJpg(jpg);
+                const dims = page.getViewport({ scale: 1 });
+                out.addPage([dims.width, dims.height]).drawImage(img, { x: 0, y: 0, width: dims.width, height: dims.height });
+            }
+            fill.style.width = '98%';
+            processedBlob = new Blob([await out.save()], { type: 'application/pdf' });
+            outputFileName = 'redacted.pdf';
         }
 
         async function rotatePdf(fill, text) {
